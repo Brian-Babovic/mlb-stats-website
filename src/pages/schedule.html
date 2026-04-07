@@ -9,7 +9,7 @@
 <body>
   <div class="page">
     <nav class="nav-bar">
-      <a href="../index.html" class="nav-bar__back">&#8592; Home</a>
+      <span class="nav-bar__title">MLB Schedule</span>
       <div class="date-nav">
         <button class="date-nav__btn" id="prev-day" aria-label="Previous day">&#8249;</button>
         <span class="date-nav__label" id="date-label"></span>
@@ -24,6 +24,9 @@
   </div>
 
   <script type="module">
+    import { initSidebar } from '../components/sidebar.js';
+    initSidebar();
+
     import {
       fetchSchedule,
       formatDate,
