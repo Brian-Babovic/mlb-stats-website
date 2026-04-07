@@ -35,7 +35,9 @@
       groupGamesByState,
       getGameTime,
       getInningDisplay,
+      getLogoUrl,
     } from '../utils/api.js';
+
 
     // ── State ──────────────────────────────────────────────────────────────
     function todayLocal() {
@@ -120,6 +122,25 @@
       container.innerHTML = html;
     }
 
+    function teamRow(teamData, scoreClass, scoreStr, showRecord) {
+      const id    = teamData.team.id;
+      const abbr  = teamData.team.abbreviation ?? '';
+      const name  = teamData.team.name ?? '';
+      const rec   = teamData.leagueRecord;
+      const record = (showRecord && rec) ? `<span class="team-row__record">(${rec.wins}-${rec.losses})</span>` : '';
+      const logo  = `<img class="team-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
+      return `
+        <div class="team-row">
+          <span class="team-row__abbr">${abbr}</span>
+          ${logo}
+          <div class="team-row__info">
+            <a class="team-row__name" href="team.html?id=${id}">${name}</a>
+            ${record}
+          </div>
+          <span class="${scoreClass}">${scoreStr}</span>
+        </div>`;
+    }
+
     function renderGame(game, state) {
       const away = game.teams.away;
       const home = game.teams.home;
@@ -136,13 +157,8 @@
       const awayScoreStr = awayScore !== null ? awayScore : '-';
       const homeScoreStr = homeScore !== null ? homeScore : '-';
 
-      const awayId   = away.team.id;
-      const homeId   = home.team.id;
-      const awayAbbr = away.team.abbreviation ?? '';
-      const homeAbbr = home.team.abbreviation ?? '';
-      const awayName = away.team.name ?? '';
-      const homeName = home.team.name ?? '';
-      const gameId   = game.gamePk;
+      const gameId = game.gamePk;
+      const showRecord = state === 'Preview';
 
       let statusHtml = '';
       let linkText = '';
@@ -167,16 +183,8 @@
       return `
         <div class="game-card">
           <div class="game-card__teams">
-            <div class="team-row">
-              <span class="team-row__abbr">${awayAbbr}</span>
-              <a class="team-row__name" href="team.html?id=${awayId}">${awayName}</a>
-              <span class="${awayScoreClass}">${awayScoreStr}</span>
-            </div>
-            <div class="team-row">
-              <span class="team-row__abbr">${homeAbbr}</span>
-              <a class="team-row__name" href="team.html?id=${homeId}">${homeName}</a>
-              <span class="${homeScoreClass}">${homeScoreStr}</span>
-            </div>
+            ${teamRow(away, awayScoreClass, awayScoreStr, showRecord)}
+            ${teamRow(home, homeScoreClass, homeScoreStr, showRecord)}
           </div>
           <div class="game-card__status">
             ${statusHtml}

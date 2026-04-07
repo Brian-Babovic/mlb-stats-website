@@ -26,6 +26,7 @@ function applyTheme(dark) {
     document.documentElement.removeAttribute('data-theme');
   }
   localStorage.setItem('theme', dark ? 'dark' : 'light');
+  document.dispatchEvent(new CustomEvent('themechange', { detail: { dark } }));
 
   const thumb = document.getElementById('theme-toggle-thumb');
   if (thumb) thumb.textContent = dark ? '☽' : '☀';

@@ -41,6 +41,10 @@ export function getGameTime(game) {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
+export function getLogoUrl(abbrev) {
+  return `https://a.espncdn.com/i/teamlogos/mlb/500/${abbrev.toLowerCase()}.png`;
+}
+
 export function getInningDisplay(game) {
   const ls = game.linescore;
   if (!ls) return '';
