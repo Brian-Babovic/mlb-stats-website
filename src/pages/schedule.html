@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MLB Schedule</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+  <div class="page">
+    <nav class="nav-bar">
+      <a href="../index.html" class="nav-bar__back">&#8592; Home</a>
+      <div class="date-nav">
+        <button class="date-nav__btn" id="prev-day" aria-label="Previous day">&#8249;</button>
+        <span class="date-nav__label" id="date-label"></span>
+        <button class="date-nav__btn" id="next-day" aria-label="Next day">&#8250;</button>
+        <button class="date-nav__today" id="today-btn">Today</button>
+      </div>
+    </nav>
+
+    <div id="games-container">
+      <div class="loading">Loading games&hellip;</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      fetchSchedule,
+      formatDate,
+      displayDate,
+      groupGamesByState,
+      getGameTime,
+      getInningDisplay,
+    } from '../utils/api.js';
+
+    // ── State ──────────────────────────────────────────────────────────────
+    function todayLocal() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    const params = new URLSearchParams(location.search);
+    let currentDate = params.has('date')
+      ? new Date(params.get('date') + 'T00:00:00')
+      : todayLocal();
+
+    // ── Routing helpers ────────────────────────────────────────────────────
+    function navigate(date) {
+      currentDate = date;
+      const url = new URL(location.href);
+      url.searchParams.set('date', formatDate(date));
+      history.pushState({}, '', url);
+      render();
+    }
+
+    document.getElementById('prev-day').addEventListener('click', () => {
+      const d = new Date(currentDate);
+      d.setDate(d.getDate() - 1);
+      navigate(d);
+    });
+
+    document.getElementById('next-day').addEventListener('click', () => {
+      const d = new Date(currentDate);
+      d.setDate(d.getDate() + 1);
+      navigate(d);
+    });
+
+    document.getElementById('today-btn').addEventListener('click', () => {
+      navigate(todayLocal());
+    });
+
+    window.addEventListener('popstate', () => {
+      const p = new URLSearchParams(location.search);
+      currentDate = p.has('date')
+        ? new Date(p.get('date') + 'T00:00:00')
+        : todayLocal();
+      render();
+    });
+
+    // ── Rendering ──────────────────────────────────────────────────────────
+    async function render() {
+      document.getElementById('date-label').textContent = displayDate(currentDate);
+      const container = document.getElementById('games-container');
+      container.innerHTML = '<div class="loading">Loading games&hellip;</div>';
+
+      let games;
+      try {
+        games = await fetchSchedule(currentDate);
+      } catch (err) {
+        container.innerHTML = `<div class="error-msg">Could not load games. ${err.message}</div>`;
+        return;
+      }
+
+      if (games.length === 0) {
+        container.innerHTML = '<div class="empty-state">No games scheduled for this date.</div>';
+        return;
+      }
+
+      const groups = groupGamesByState(games);
+      const sections = [
+        { key: 'Live',    label: 'Live' },
+        { key: 'Final',   label: 'Final' },
+        { key: 'Preview', label: 'Upcoming' },
+      ];
+
+      let html = '';
+      for (const { key, label } of sections) {
+        const list = groups[key];
+        if (!list.length) continue;
+        html += `<div class="section-label">${label}</div>`;
+        for (const game of list) {
+          html += renderGame(game, key);
+        }
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderGame(game, state) {
+      const away = game.teams.away;
+      const home = game.teams.home;
+
+      const awayScore = away.score ?? null;
+      const homeScore = home.score ?? null;
+
+      const awayWon = awayScore !== null && homeScore !== null && awayScore > homeScore;
+      const homeWon = awayScore !== null && homeScore !== null && homeScore > awayScore;
+
+      const awayScoreClass = awayWon ? 'team-row__score team-row__score--winner' : 'team-row__score';
+      const homeScoreClass = homeWon ? 'team-row__score team-row__score--winner' : 'team-row__score';
+
+      const awayScoreStr = awayScore !== null ? awayScore : '-';
+      const homeScoreStr = homeScore !== null ? homeScore : '-';
+
+      const awayId   = away.team.id;
+      const homeId   = home.team.id;
+      const awayAbbr = away.team.abbreviation ?? '';
+      const homeAbbr = home.team.abbreviation ?? '';
+      const awayName = away.team.name ?? '';
+      const homeName = home.team.name ?? '';
+      const gameId   = game.gamePk;
+
+      let statusHtml = '';
+      let linkText = '';
+
+      if (state === 'Live') {
+        const inning = getInningDisplay(game);
+        statusHtml = `
+          <div class="status-label status-label--live">
+            <span class="live-dot"></span> Live
+          </div>
+          <div class="inning-label">${inning}</div>`;
+        linkText = 'Follow live &rarr;';
+      } else if (state === 'Final') {
+        statusHtml = `<div class="status-label">Final</div>`;
+        linkText = 'Game recap &rarr;';
+      } else {
+        const time = getGameTime(game);
+        statusHtml = `<div class="status-label">${time}</div>`;
+        linkText = 'Game info &rarr;';
+      }
+
+      return `
+        <div class="game-card">
+          <div class="game-card__teams">
+            <div class="team-row">
+              <span class="team-row__abbr">${awayAbbr}</span>
+              <a class="team-row__name" href="team.html?id=${awayId}">${awayName}</a>
+              <span class="${awayScoreClass}">${awayScoreStr}</span>
+            </div>
+            <div class="team-row">
+              <span class="team-row__abbr">${homeAbbr}</span>
+              <a class="team-row__name" href="team.html?id=${homeId}">${homeName}</a>
+              <span class="${homeScoreClass}">${homeScoreStr}</span>
+            </div>
+          </div>
+          <div class="game-card__status">
+            ${statusHtml}
+            <a class="game-card__link" href="game.html?id=${gameId}">${linkText}</a>
+          </div>
+        </div>`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

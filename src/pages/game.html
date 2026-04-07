@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+  <div class="page">
+    <nav class="nav-bar">
+      <a href="schedule.html" class="nav-bar__back">&#8592; Schedule</a>
+    </nav>
+    <div class="stub-page">
+      <h1 id="heading">Game page</h1>
+      <p>Game page coming soon</p>
+    </div>
+  </div>
+  <script>
+    const id = new URLSearchParams(location.search).get('id');
+    if (id) document.getElementById('heading').textContent = `Game #${id}`;
+  </script>
+</body>
+</html>
