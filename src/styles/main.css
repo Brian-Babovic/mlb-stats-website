@@ -460,6 +460,94 @@ a:hover {
   overflow-y: auto;
 }
 
+.team-tab-content--roster {
+  padding: 0;
+  text-align: left;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* ── Roster rows ── */
+
+.roster-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-card);
+  cursor: default;
+  transition: background 0.12s;
+}
+
+.roster-row:last-child {
+  border-bottom: none;
+}
+
+.roster-row:hover {
+  background: var(--bg-btn-hover);
+}
+
+.roster-row__headshot-wrap {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.roster-row__headshot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--border-card);
+}
+
+.roster-row__initials {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--border-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  align-items: center;
+  justify-content: center;
+}
+
+.roster-row__number {
+  width: 28px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.roster-row__name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roster-row__meta {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.roster-row__pos {
+  width: 28px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 /* ── Hamburger button ── */
 
 .hamburger {

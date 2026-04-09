@@ -41,6 +41,17 @@ export async function fetchSchedule(date) {
   return data.dates?.[0]?.games ?? [];
 }
 
+export async function fetchRoster(teamId) {
+  const year = new Date().getFullYear();
+  const url = `${MLB_API_BASE}/teams/${teamId}/roster?rosterType=active&season=${year}&hydrate=person`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch roster: ${res.status}`);
+  const data = await res.json();
+  const roster = data.roster ?? [];
+  roster.sort((a, b) => (parseInt(a.jerseyNumber) || 999) - (parseInt(b.jerseyNumber) || 999));
+  return roster;
+}
+
 export async function fetchTeamSchedule(teamId) {
   const year = new Date().getFullYear();
   const url = `${MLB_API_BASE}/schedule?sportId=1&season=${year}&teamId=${teamId}&hydrate=linescore,team`;

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Player</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+  <script>(function(){if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav-bar">
+      <span class="nav-bar__title">Player</span>
+    </nav>
+
+    <div id="player-container">
+      <div class="empty-state" style="padding:64px 0;text-align:center">Player page coming soon.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initSidebar } from '../components/sidebar.js';
+    initSidebar();
+  </script>
+</body>
+</html>

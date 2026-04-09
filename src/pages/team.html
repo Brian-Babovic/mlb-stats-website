@@ -22,7 +22,7 @@
     import { initSidebar } from '../components/sidebar.js';
     import {
       fetchTeam, fetchTeamStats, fetchStandings, findTeamStanding,
-      fetchTeamSchedule, getLogoUrl, getGameTime, getInningDisplay,
+      fetchTeamSchedule, fetchRoster, getLogoUrl, getGameTime, getInningDisplay,
     } from '../utils/api.js';
 
     initSidebar();
@@ -127,10 +127,17 @@
           `).join('')}
         </div>
 
-        ${tabs.map((t, i) => `
-          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}${i === 0 ? ' team-tab-content--schedule' : ''}" data-panel="${i}" id="${i === 0 ? 'schedule-panel' : ''}">
-            ${i === 0 ? '<div class="loading">Loading schedule&hellip;</div>' : `${t} coming soon`}
-          </div>`).join('')}
+        ${tabs.map((t, i) => {
+          const extraClass = i === 0 ? ' team-tab-content--schedule' : i === 1 ? ' team-tab-content--roster' : '';
+          const id = i === 0 ? 'schedule-panel' : i === 1 ? 'roster-panel' : '';
+          const inner = i === 0 ? '<div class="loading">Loading schedule&hellip;</div>'
+                      : i === 1 ? '<div class="loading">Loading roster&hellip;</div>'
+                      : `${t} coming soon`;
+          return `
+          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}${extraClass}" data-panel="${i}"${id ? ` id="${id}"` : ''}>
+            ${inner}
+          </div>`;
+        }).join('')}
       `;
 
       // Tab switching
@@ -147,8 +154,9 @@
         });
       });
 
-      // Load schedule tab
+      // Load async tabs
       loadScheduleTab(teamId);
+      loadRosterTab(teamId);
     }
 
     async function loadScheduleTab(teamId) {
@@ -246,6 +254,51 @@
       // If no final games, anchor at top
       if (lastFinalIdx === -1) html = '<div id="scroll-anchor"></div>' + html;
       return html;
+    }
+    async function loadRosterTab(teamId) {
+      const panel = document.getElementById('roster-panel');
+      try {
+        const roster = await fetchRoster(teamId);
+        if (!roster.length) {
+          panel.innerHTML = '<div class="empty-state" style="padding:48px 0;text-align:center">No roster available.</div>';
+          return;
+        }
+        panel.innerHTML = roster.map(renderRosterRow).join('');
+      } catch (err) {
+        panel.innerHTML = `<div class="error-msg" style="padding:24px">Could not load roster. ${err.message}</div>`;
+      }
+    }
+
+    function renderRosterRow(entry) {
+      const person = entry.person ?? {};
+      const id = person.id;
+      const fullName = person.fullName ?? '—';
+      const jerseyNumber = entry.jerseyNumber ?? '—';
+      const pos = entry.position?.abbreviation ?? '—';
+      const bats = person.batSide?.code ?? '?';
+      const throws = person.pitchHand?.code ?? '?';
+      const age = person.currentAge ?? '—';
+
+      const initials = fullName.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('');
+      const headshotUrl = `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,q_auto:best/v1/people/${id}/headshot/67/current`;
+
+      return `
+        <div class="roster-row">
+          <div class="roster-row__headshot-wrap">
+            <img class="roster-row__headshot" src="${headshotUrl}" alt=""
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="roster-row__initials">${initials}</div>
+          </div>
+          <span class="roster-row__number">${jerseyNumber}</span>
+          <span class="roster-row__name">
+            <a href="/pages/player?id=${id}">${fullName}</a>
+          </span>
+          <div class="roster-row__meta">
+            <span class="roster-row__pos">${pos}</span>
+            <span>${bats}/${throws}</span>
+            <span>${age}</span>
+          </div>
+        </div>`;
     }
   </script>
 </body>
