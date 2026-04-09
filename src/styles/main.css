@@ -467,6 +467,82 @@ a:hover {
   overflow-y: auto;
 }
 
+/* ── Stats table ── */
+
+.team-tab-content--stats {
+  padding: 0;
+  text-align: left;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.stats-table-wrap {
+  overflow-x: auto;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.stats-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-card);
+  box-shadow: 0 1px 0 var(--border-card);
+}
+
+.stats-table th {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.stats-table th:first-child {
+  text-align: left;
+  padding-left: 12px;
+}
+
+.stats-table th:hover {
+  color: var(--text-primary);
+}
+
+.stats-table th.sort-active {
+  color: var(--text-primary);
+}
+
+.stats-table td {
+  padding: 7px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-card);
+  color: var(--text-secondary);
+}
+
+.stats-table td:first-child {
+  text-align: left;
+  padding-left: 12px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.stats-table tbody tr:hover td {
+  background: var(--bg-btn-hover);
+}
+
 /* ── Roster rows ── */
 
 .roster-row {

@@ -41,6 +41,28 @@ export async function fetchSchedule(date) {
   return data.dates?.[0]?.games ?? [];
 }
 
+export async function fetchPlayerHittingStats(teamId) {
+  const year = new Date().getFullYear();
+
+  // Fetch active roster to get player IDs
+  const rosterRes = await fetch(`${MLB_API_BASE}/teams/${teamId}/roster?rosterType=active&season=${year}`);
+  if (!rosterRes.ok) throw new Error(`Failed to fetch roster: ${rosterRes.status}`);
+  const rosterData = await rosterRes.json();
+  const playerIds = (rosterData.roster ?? []).map(e => e.person.id);
+
+  // Batch-fetch individual hitting stats for all players in parallel
+  const results = await Promise.all(playerIds.map(async id => {
+    const res = await fetch(`${MLB_API_BASE}/people/${id}/stats?stats=season&group=hitting&season=${year}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const stat = data.stats?.[0]?.splits?.[0]?.stat ?? null;
+    if (!stat || (stat.plateAppearances ?? 0) === 0) return null;
+    return { player: { id, fullName: rosterData.roster.find(e => e.person.id === id)?.person.fullName ?? '' }, stat };
+  }));
+
+  return results.filter(Boolean);
+}
+
 export async function fetchRoster(teamId) {
   const year = new Date().getFullYear();
   const url = `${MLB_API_BASE}/teams/${teamId}/roster?rosterType=active&season=${year}&hydrate=person`;

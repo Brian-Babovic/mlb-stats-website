@@ -22,7 +22,8 @@
     import { initSidebar } from '../components/sidebar.js';
     import {
       fetchTeam, fetchTeamStats, fetchStandings, findTeamStanding,
-      fetchTeamSchedule, fetchRoster, getLogoUrl, getGameTime, getInningDisplay,
+      fetchTeamSchedule, fetchRoster, fetchPlayerHittingStats,
+      getLogoUrl, getGameTime, getInningDisplay,
     } from '../utils/api.js';
 
     initSidebar();
@@ -87,7 +88,7 @@
         { label: 'E',    value: fmtInt(fielding?.errors) },
       ];
 
-      const tabs = ['Schedule', 'Roster', 'Hitters', 'Pitchers', 'Advanced'];
+      const tabs = ['Schedule', 'Roster', 'Hitting', 'Pitchers', 'Advanced'];
 
       container.innerHTML = `
         <div class="team-header">
@@ -128,13 +129,17 @@
         </div>
 
         ${tabs.map((t, i) => {
-          const extraClass = i === 0 ? ' team-tab-content--schedule' : i === 1 ? ' team-tab-content--roster' : '';
-          const id = i === 0 ? 'schedule-panel' : i === 1 ? 'roster-panel' : '';
+          const extraClass = i === 0 ? ' team-tab-content--schedule'
+                           : i === 1 ? ' team-tab-content--roster'
+                           : i === 2 ? ' team-tab-content--stats'
+                           : '';
+          const panelId = i === 0 ? 'schedule-panel' : i === 1 ? 'roster-panel' : i === 2 ? 'hitting-panel' : '';
           const inner = i === 0 ? '<div class="loading">Loading schedule&hellip;</div>'
                       : i === 1 ? '<div class="loading">Loading roster&hellip;</div>'
+                      : i === 2 ? '<div class="loading">Loading stats&hellip;</div>'
                       : `${t} coming soon`;
           return `
-          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}${extraClass}" data-panel="${i}"${id ? ` id="${id}"` : ''}>
+          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}${extraClass}" data-panel="${i}"${panelId ? ` id="${panelId}"` : ''}>
             ${inner}
           </div>`;
         }).join('')}
@@ -157,6 +162,7 @@
       // Load async tabs
       loadScheduleTab(teamId);
       loadRosterTab(teamId);
+      loadHittingTab(teamId);
     }
 
     async function loadScheduleTab(teamId) {
@@ -255,6 +261,116 @@
       if (lastFinalIdx === -1) html = '<div id="scroll-anchor"></div>' + html;
       return html;
     }
+    // ── Hitting tab ───────────────────────────────────────────────────────────
+
+    const HITTING_COLS = [
+      { key: 'name',        label: 'Player', fmt: 'name', align: 'left' },
+      { key: 'gamesPlayed', label: 'G',   fmt: 'int' },
+      { key: 'atBats',      label: 'AB',  fmt: 'int' },
+      { key: 'runs',        label: 'R',   fmt: 'int' },
+      { key: 'hits',        label: 'H',   fmt: 'int' },
+      { key: 'doubles',     label: '2B',  fmt: 'int' },
+      { key: 'triples',     label: '3B',  fmt: 'int' },
+      { key: 'homeRuns',    label: 'HR',  fmt: 'int' },
+      { key: 'rbi',         label: 'RBI', fmt: 'int' },
+      { key: 'baseOnBalls', label: 'BB',  fmt: 'int' },
+      { key: 'strikeOuts',  label: 'SO',  fmt: 'int' },
+      { key: 'stolenBases', label: 'SB',  fmt: 'int' },
+      { key: 'avg',         label: 'AVG', fmt: 'avg' },
+      { key: 'obp',         label: 'OBP', fmt: 'avg' },
+      { key: 'slg',         label: 'SLG', fmt: 'avg' },
+      { key: 'ops',         label: 'OPS', fmt: 'avg' },
+    ];
+
+    let hittingSort = { key: 'ops', dir: -1 }; // -1 = desc
+
+    async function loadHittingTab(teamId) {
+      const panel = document.getElementById('hitting-panel');
+      try {
+        const splits = await fetchPlayerHittingStats(teamId);
+        if (!splits.length) {
+          panel.innerHTML = '<div class="empty-state" style="padding:48px 0;text-align:center">No stats available.</div>';
+          return;
+        }
+        panel.innerHTML = buildHittingTable(splits);
+        panel.querySelectorAll('.stats-table th[data-col]').forEach(th => {
+          th.addEventListener('click', () => {
+            const key = th.dataset.col;
+            if (hittingSort.key === key) {
+              hittingSort.dir *= -1;
+            } else {
+              hittingSort = { key, dir: key === 'name' ? 1 : -1 };
+            }
+            const tbody = panel.querySelector('.stats-table tbody');
+            tbody.innerHTML = buildHittingRows(splits);
+            updateHittingSortIndicators(panel);
+          });
+        });
+      } catch (err) {
+        panel.innerHTML = `<div class="error-msg" style="padding:24px">Could not load hitting stats. ${err.message}</div>`;
+      }
+    }
+
+    function buildHittingTable(splits) {
+      const headers = HITTING_COLS.map(c => {
+        const active = c.key === hittingSort.key ? ' sort-active' : '';
+        const indicator = c.key === hittingSort.key ? (hittingSort.dir === 1 ? ' ▲' : ' ▼') : '';
+        const align = c.align === 'left' ? ' style="text-align:left"' : '';
+        return `<th data-col="${c.key}" class="${active}"${align}>${c.label}${indicator}</th>`;
+      }).join('');
+
+      return `
+        <div class="stats-table-wrap">
+          <table class="stats-table">
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${buildHittingRows(splits)}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function buildHittingRows(splits) {
+      const sorted = [...splits].sort((a, b) => {
+        const key = hittingSort.key;
+        if (key === 'name') {
+          const na = a.player?.fullName ?? '';
+          const nb = b.player?.fullName ?? '';
+          return na.localeCompare(nb) * hittingSort.dir;
+        }
+        const va = parseFloat(a.stat?.[key]) || 0;
+        const vb = parseFloat(b.stat?.[key]) || 0;
+        return (va - vb) * hittingSort.dir;
+      });
+
+      return sorted.map(s => {
+        const player = s.player ?? {};
+        const stat = s.stat ?? {};
+        const cells = HITTING_COLS.map(c => {
+          if (c.fmt === 'name') {
+            return `<td><a href="/pages/player?id=${player.id}">${player.fullName ?? '—'}</a></td>`;
+          }
+          const v = stat[c.key];
+          const display = c.fmt === 'avg'
+            ? (v != null ? Number(v).toFixed(3).replace(/^0/, '') : '—')
+            : (v != null ? String(Math.round(v)) : '—');
+          return `<td>${display}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+    }
+
+    function updateHittingSortIndicators(panel) {
+      panel.querySelectorAll('.stats-table th[data-col]').forEach(th => {
+        const key = th.dataset.col;
+        const active = key === hittingSort.key;
+        th.classList.toggle('sort-active', active);
+        const col = HITTING_COLS.find(c => c.key === key);
+        const indicator = active ? (hittingSort.dir === 1 ? ' ▲' : ' ▼') : '';
+        th.textContent = col.label + indicator;
+      });
+    }
+
+    // ── Roster tab ────────────────────────────────────────────────────────────
+
     async function loadRosterTab(teamId) {
       const panel = document.getElementById('roster-panel');
       try {
