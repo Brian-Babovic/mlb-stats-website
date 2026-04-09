@@ -63,6 +63,26 @@ export async function fetchPlayerHittingStats(teamId) {
   return results.filter(Boolean);
 }
 
+export async function fetchPlayerPitchingStats(teamId) {
+  const year = new Date().getFullYear();
+
+  const rosterRes = await fetch(`${MLB_API_BASE}/teams/${teamId}/roster?rosterType=active&season=${year}`);
+  if (!rosterRes.ok) throw new Error(`Failed to fetch roster: ${rosterRes.status}`);
+  const rosterData = await rosterRes.json();
+  const playerIds = (rosterData.roster ?? []).map(e => e.person.id);
+
+  const results = await Promise.all(playerIds.map(async id => {
+    const res = await fetch(`${MLB_API_BASE}/people/${id}/stats?stats=season&group=pitching&season=${year}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const stat = data.stats?.[0]?.splits?.[0]?.stat ?? null;
+    if (!stat || parseFloat(stat.inningsPitched ?? 0) === 0) return null;
+    return { player: { id, fullName: rosterData.roster.find(e => e.person.id === id)?.person.fullName ?? '' }, stat };
+  }));
+
+  return results.filter(Boolean);
+}
+
 export async function fetchRoster(teamId) {
   const year = new Date().getFullYear();
   const url = `${MLB_API_BASE}/teams/${teamId}/roster?rosterType=active&season=${year}&hydrate=person`;

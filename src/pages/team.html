@@ -22,7 +22,7 @@
     import { initSidebar } from '../components/sidebar.js';
     import {
       fetchTeam, fetchTeamStats, fetchStandings, findTeamStanding,
-      fetchTeamSchedule, fetchRoster, fetchPlayerHittingStats,
+      fetchTeamSchedule, fetchRoster, fetchPlayerHittingStats, fetchPlayerPitchingStats,
       getLogoUrl, getGameTime, getInningDisplay,
     } from '../utils/api.js';
 
@@ -88,7 +88,7 @@
         { label: 'E',    value: fmtInt(fielding?.errors) },
       ];
 
-      const tabs = ['Schedule', 'Roster', 'Hitting', 'Pitchers', 'Advanced'];
+      const tabs = ['Schedule', 'Roster', 'Hitting', 'Pitching', 'Advanced'];
 
       container.innerHTML = `
         <div class="team-header">
@@ -132,11 +132,13 @@
           const extraClass = i === 0 ? ' team-tab-content--schedule'
                            : i === 1 ? ' team-tab-content--roster'
                            : i === 2 ? ' team-tab-content--stats'
+                           : i === 3 ? ' team-tab-content--stats'
                            : '';
-          const panelId = i === 0 ? 'schedule-panel' : i === 1 ? 'roster-panel' : i === 2 ? 'hitting-panel' : '';
+          const panelId = i === 0 ? 'schedule-panel' : i === 1 ? 'roster-panel' : i === 2 ? 'hitting-panel' : i === 3 ? 'pitching-panel' : '';
           const inner = i === 0 ? '<div class="loading">Loading schedule&hellip;</div>'
                       : i === 1 ? '<div class="loading">Loading roster&hellip;</div>'
                       : i === 2 ? '<div class="loading">Loading stats&hellip;</div>'
+                      : i === 3 ? '<div class="loading">Loading stats&hellip;</div>'
                       : `${t} coming soon`;
           return `
           <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}${extraClass}" data-panel="${i}"${panelId ? ` id="${panelId}"` : ''}>
@@ -163,6 +165,7 @@
       loadScheduleTab(teamId);
       loadRosterTab(teamId);
       loadHittingTab(teamId);
+      loadPitchingTab(teamId);
     }
 
     async function loadScheduleTab(teamId) {
@@ -366,6 +369,115 @@
         const col = HITTING_COLS.find(c => c.key === key);
         const indicator = active ? (hittingSort.dir === 1 ? ' ▲' : ' ▼') : '';
         th.textContent = col.label + indicator;
+      });
+    }
+
+    // ── Pitching tab ──────────────────────────────────────────────────────────
+
+    const PITCHING_COLS = [
+      { key: 'name',           label: 'Player', fmt: 'name', align: 'left' },
+      { key: 'gamesPlayed',    label: 'G',    fmt: 'int' },
+      { key: 'gamesStarted',   label: 'GS',   fmt: 'int' },
+      { key: 'inningsPitched', label: 'IP',   fmt: 'ip' },
+      { key: 'wins',           label: 'W',    fmt: 'int' },
+      { key: 'losses',         label: 'L',    fmt: 'int' },
+      { key: 'saves',          label: 'SV',   fmt: 'int' },
+      { key: 'hits',           label: 'H',    fmt: 'int' },
+      { key: 'runs',           label: 'R',    fmt: 'int' },
+      { key: 'earnedRuns',     label: 'ER',   fmt: 'int' },
+      { key: 'baseOnBalls',    label: 'BB',   fmt: 'int' },
+      { key: 'strikeOuts',     label: 'SO',   fmt: 'int' },
+      { key: 'homeRuns',       label: 'HR',   fmt: 'int' },
+      { key: 'era',            label: 'ERA',  fmt: 'era' },
+      { key: 'whip',           label: 'WHIP', fmt: 'era' },
+    ];
+
+    let pitchingSort = { key: 'era', dir: 1 }; // 1 = asc (lower ERA is better)
+
+    async function loadPitchingTab(teamId) {
+      const panel = document.getElementById('pitching-panel');
+      try {
+        const splits = await fetchPlayerPitchingStats(teamId);
+        if (!splits.length) {
+          panel.innerHTML = '<div class="empty-state" style="padding:48px 0;text-align:center">No stats available.</div>';
+          return;
+        }
+        panel.innerHTML = buildPitchingTable(splits);
+        panel.querySelectorAll('.stats-table th[data-col]').forEach(th => {
+          th.addEventListener('click', () => {
+            const key = th.dataset.col;
+            if (pitchingSort.key === key) {
+              pitchingSort.dir *= -1;
+            } else {
+              pitchingSort = { key, dir: key === 'name' ? 1 : key === 'era' || key === 'whip' ? 1 : -1 };
+            }
+            const tbody = panel.querySelector('.stats-table tbody');
+            tbody.innerHTML = buildPitchingRows(splits);
+            updatePitchingSortIndicators(panel);
+          });
+        });
+      } catch (err) {
+        panel.innerHTML = `<div class="error-msg" style="padding:24px">Could not load pitching stats. ${err.message}</div>`;
+      }
+    }
+
+    function buildPitchingTable(splits) {
+      const headers = PITCHING_COLS.map(c => {
+        const active = c.key === pitchingSort.key ? ' sort-active' : '';
+        const indicator = c.key === pitchingSort.key ? (pitchingSort.dir === 1 ? ' ▲' : ' ▼') : '';
+        const align = c.align === 'left' ? ' style="text-align:left"' : '';
+        return `<th data-col="${c.key}" class="${active}"${align}>${c.label}${indicator}</th>`;
+      }).join('');
+
+      return `
+        <div class="stats-table-wrap">
+          <table class="stats-table">
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${buildPitchingRows(splits)}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function buildPitchingRows(splits) {
+      const sorted = [...splits].sort((a, b) => {
+        const key = pitchingSort.key;
+        if (key === 'name') {
+          return (a.player?.fullName ?? '').localeCompare(b.player?.fullName ?? '') * pitchingSort.dir;
+        }
+        const va = parseFloat(a.stat?.[key]) || 0;
+        const vb = parseFloat(b.stat?.[key]) || 0;
+        return (va - vb) * pitchingSort.dir;
+      });
+
+      return sorted.map(s => {
+        const player = s.player ?? {};
+        const stat = s.stat ?? {};
+        const cells = PITCHING_COLS.map(c => {
+          if (c.fmt === 'name') {
+            return `<td><a href="/pages/player?id=${player.id}">${player.fullName ?? '—'}</a></td>`;
+          }
+          const v = stat[c.key];
+          let display;
+          if (c.fmt === 'ip') {
+            display = v != null ? Number(v).toFixed(1) : '—';
+          } else if (c.fmt === 'era') {
+            display = v != null ? Number(v).toFixed(2) : '—';
+          } else {
+            display = v != null ? String(Math.round(v)) : '—';
+          }
+          return `<td>${display}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+    }
+
+    function updatePitchingSortIndicators(panel) {
+      panel.querySelectorAll('.stats-table th[data-col]').forEach(th => {
+        const key = th.dataset.col;
+        const active = key === pitchingSort.key;
+        th.classList.toggle('sort-active', active);
+        const col = PITCHING_COLS.find(c => c.key === key);
+        th.textContent = col.label + (active ? (pitchingSort.dir === 1 ? ' ▲' : ' ▼') : '');
       });
     }
 
