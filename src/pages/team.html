@@ -20,7 +20,7 @@
 
   <script type="module">
     import { initSidebar } from '../components/sidebar.js';
-    import { fetchTeam, fetchStandings, findTeamStanding, getLogoUrl } from '../utils/api.js';
+    import { fetchTeam, fetchTeamStats, fetchStandings, findTeamStanding, getLogoUrl } from '../utils/api.js';
 
     initSidebar();
 
@@ -35,16 +35,26 @@
 
     async function loadTeam(id) {
       try {
-        const [team, standingsData] = await Promise.all([fetchTeam(id), fetchStandings()]);
+        const [team, standingsData, hitting, pitching, fielding] = await Promise.all([
+          fetchTeam(id),
+          fetchStandings(),
+          fetchTeamStats(id, 'hitting'),
+          fetchTeamStats(id, 'pitching'),
+          fetchTeamStats(id, 'fielding'),
+        ]);
         if (!team) throw new Error('Team not found.');
         const standing = findTeamStanding(standingsData, id);
-        render(team, standing);
+        render(team, standing, hitting, pitching, fielding);
       } catch (err) {
         container.innerHTML = `<div class="error-msg">Could not load team. ${err.message}</div>`;
       }
     }
 
-    function render(team, standing) {
+    function fmt1(v)  { return v != null ? Number(v).toFixed(1) : '—'; }
+    function fmt3(v)  { return v != null ? Number(v).toFixed(3).replace(/^0/, '') : '—'; }
+    function fmtInt(v){ return v != null ? String(v) : '—'; }
+
+    function render(team, standing, hitting, pitching, fielding) {
       document.title = team.name;
       document.querySelector('.nav-bar__title').textContent = 'Team';
 
@@ -61,17 +71,17 @@
         : '';
 
       const offenseRows = [
-        { label: 'RPG',  value: '—' },
-        { label: 'AVG',  value: '—' },
-        { label: 'OPS',  value: '—' },
-        { label: 'HR',   value: '—' },
+        { label: 'RPG', value: (hitting?.runs != null && hitting?.gamesPlayed) ? (hitting.runs / hitting.gamesPlayed).toFixed(1) : '—' },
+        { label: 'AVG', value: fmt3(hitting?.avg) },
+        { label: 'OPS', value: fmt3(hitting?.ops) },
+        { label: 'HR',  value: fmtInt(hitting?.homeRuns) },
       ];
 
       const defenseRows = [
-        { label: 'RPGA', value: '—' },
-        { label: 'BAA',  value: '—' },
-        { label: 'OPSA', value: '—' },
-        { label: 'E',    value: '—' },
+        { label: 'RPGA', value: (pitching?.runs != null && pitching?.gamesPlayed) ? (pitching.runs / pitching.gamesPlayed).toFixed(1) : '—' },
+        { label: 'BAA',  value: fmt3(pitching?.avg) },
+        { label: 'OPSA', value: fmt3(pitching?.ops) },
+        { label: 'E',    value: fmtInt(fielding?.errors) },
       ];
 
       const tabs = ['Schedule', 'Roster', 'Hitters', 'Pitchers', 'Advanced'];

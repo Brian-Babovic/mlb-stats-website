@@ -1,5 +1,14 @@
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
+export async function fetchTeamStats(teamId, group) {
+  const year = new Date().getFullYear();
+  const url = `${MLB_API_BASE}/teams/${teamId}/stats?stats=season&group=${group}&season=${year}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${group} stats: ${res.status}`);
+  const data = await res.json();
+  return data.stats?.[0]?.splits?.[0]?.stat ?? null;
+}
+
 export async function fetchTeam(teamId) {
   const res = await fetch(`${MLB_API_BASE}/teams/${teamId}`);
   if (!res.ok) throw new Error(`Failed to fetch team: ${res.status}`);
