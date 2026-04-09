@@ -10,18 +10,130 @@
 <body>
   <div class="page">
     <nav class="nav-bar">
+      <span class="nav-bar__title">Team</span>
     </nav>
-    <div class="stub-page">
-      <h1 id="heading">Team page</h1>
-      <p>Team page coming soon</p>
+
+    <div id="team-container">
+      <div class="loading">Loading&hellip;</div>
     </div>
   </div>
+
   <script type="module">
     import { initSidebar } from '../components/sidebar.js';
+    import { fetchTeam, fetchStandings, findTeamStanding, getLogoUrl } from '../utils/api.js';
+
     initSidebar();
 
-    const id = new URLSearchParams(location.search).get('id');
-    if (id) document.getElementById('heading').textContent = `Team #${id}`;
+    const teamId = parseInt(new URLSearchParams(window.location.search).get('id'), 10);
+    const container = document.getElementById('team-container');
+
+    if (!teamId) {
+      container.innerHTML = '<div class="error-msg">No team ID specified.</div>';
+    } else {
+      loadTeam(teamId);
+    }
+
+    async function loadTeam(id) {
+      try {
+        const [team, standingsData] = await Promise.all([fetchTeam(id), fetchStandings()]);
+        if (!team) throw new Error('Team not found.');
+        const standing = findTeamStanding(standingsData, id);
+        render(team, standing);
+      } catch (err) {
+        container.innerHTML = `<div class="error-msg">Could not load team. ${err.message}</div>`;
+      }
+    }
+
+    function render(team, standing) {
+      document.title = team.name;
+      document.querySelector('.nav-bar__title').textContent = 'Team';
+
+      const abbrev = (team.abbreviation ?? '').toLowerCase();
+      const logoUrl = getLogoUrl(abbrev);
+
+      const wins   = standing?.wins ?? 0;
+      const losses = standing?.losses ?? 0;
+      const streak = standing?.streak?.streakCode ?? '';
+      const isWin  = streak.startsWith('W');
+      const badgeClass = isWin ? 'streak-badge streak-badge--win' : 'streak-badge streak-badge--loss';
+      const streakBadge = streak
+        ? `<span class="${badgeClass}">${streak}</span>`
+        : '';
+
+      const offenseRows = [
+        { label: 'RPG',  value: '—' },
+        { label: 'AVG',  value: '—' },
+        { label: 'OPS',  value: '—' },
+        { label: 'HR',   value: '—' },
+      ];
+
+      const defenseRows = [
+        { label: 'RPGA', value: '—' },
+        { label: 'BAA',  value: '—' },
+        { label: 'OPSA', value: '—' },
+        { label: 'E',    value: '—' },
+      ];
+
+      const tabs = ['Schedule', 'Roster', 'Hitters', 'Pitchers', 'Advanced'];
+
+      container.innerHTML = `
+        <div class="team-header">
+          <img class="team-header__logo" src="${logoUrl}" alt="${team.name} logo" onerror="this.style.display='none'">
+          <div class="team-header__info">
+            <div class="team-header__name">${team.name}</div>
+            <div class="team-header__meta">
+              <span class="team-header__record">${wins}–${losses}</span>
+              ${streakBadge}
+            </div>
+          </div>
+        </div>
+
+        <div class="team-stats-grid">
+          <div class="stats-card">
+            <div class="stats-card__label">Offense</div>
+            ${offenseRows.map(r => `
+              <div class="stats-card__row">
+                <span class="stats-card__stat-name">${r.label}</span>
+                <span class="stats-card__stat-value">${r.value}</span>
+              </div>`).join('')}
+          </div>
+          <div class="stats-card">
+            <div class="stats-card__label">Defense</div>
+            ${defenseRows.map(r => `
+              <div class="stats-card__row">
+                <span class="stats-card__stat-name">${r.label}</span>
+                <span class="stats-card__stat-value">${r.value}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="team-tabs" role="tablist">
+          ${tabs.map((t, i) => `
+            <button class="team-tab${i === 0 ? ' team-tab--active' : ''}"
+              role="tab" data-tab="${i}" aria-selected="${i === 0}">${t}</button>
+          `).join('')}
+        </div>
+
+        ${tabs.map((t, i) => `
+          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}" data-panel="${i}">
+            ${t} coming soon
+          </div>`).join('')}
+      `;
+
+      // Tab switching
+      container.querySelectorAll('.team-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = btn.dataset.tab;
+          container.querySelectorAll('.team-tab').forEach(b => {
+            b.classList.toggle('team-tab--active', b.dataset.tab === idx);
+            b.setAttribute('aria-selected', b.dataset.tab === idx);
+          });
+          container.querySelectorAll('.team-tab-content').forEach(p => {
+            p.classList.toggle('team-tab-content--active', p.dataset.panel === idx);
+          });
+        });
+      });
+    }
   </script>
 </body>
 </html>

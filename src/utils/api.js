@@ -1,5 +1,28 @@
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
+export async function fetchTeam(teamId) {
+  const res = await fetch(`${MLB_API_BASE}/teams/${teamId}`);
+  if (!res.ok) throw new Error(`Failed to fetch team: ${res.status}`);
+  const data = await res.json();
+  return data.teams?.[0] ?? null;
+}
+
+export async function fetchStandings() {
+  const year = new Date().getFullYear();
+  const res = await fetch(`${MLB_API_BASE}/standings?leagueId=103,104&season=${year}&hydrate=team`);
+  if (!res.ok) throw new Error(`Failed to fetch standings: ${res.status}`);
+  return res.json();
+}
+
+export function findTeamStanding(standingsData, teamId) {
+  for (const record of standingsData.records ?? []) {
+    for (const entry of record.teamRecords ?? []) {
+      if (entry.team.id === teamId) return entry;
+    }
+  }
+  return null;
+}
+
 export async function fetchSchedule(date) {
   const dateStr = formatDate(date);
   const url = `${MLB_API_BASE}/schedule?sportId=1&date=${dateStr}&hydrate=linescore,team`;

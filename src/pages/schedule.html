@@ -26,8 +26,6 @@
 
   <script type="module">
     import { initSidebar } from '../components/sidebar.js';
-    initSidebar();
-
     import {
       fetchSchedule,
       formatDate,
@@ -37,6 +35,8 @@
       getInningDisplay,
       getLogoUrl,
     } from '../utils/api.js';
+
+    initSidebar();
 
 
     // ── State ──────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@
           <span class="team-row__abbr">${abbrRaw}</span>
           ${logo}
           <div class="team-row__info">
-            <a class="team-row__name" href="team.html?id=${id}">${name}</a>
+            <a class="team-row__name" href="/pages/team?id=${id}">${name}</a>
             ${record}
           </div>
           <span class="${scoreClass}">${scoreStr}</span>
@@ -189,7 +189,7 @@
           </div>
           <div class="game-card__status">
             ${statusHtml}
-            <a class="game-card__link" href="game.html?id=${gameId}">${linkText}</a>
+            <a class="game-card__link" href="/pages/game?id=${gameId}">${linkText}</a>
           </div>
         </div>`;
     }

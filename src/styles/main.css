@@ -288,6 +288,171 @@ a:hover {
   color: var(--error);
 }
 
+/* ── Team page header ── */
+
+.team-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0 20px;
+  border-bottom: 1px solid var(--border-card);
+  margin-bottom: 24px;
+}
+
+.team-header__logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.team-header__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-header__name {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.team-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.team-header__record {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.streak-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.03em;
+}
+
+.streak-badge--win {
+  background: #166534;
+  color: #bbf7d0;
+}
+
+.streak-badge--loss {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+/* ── Team stats grid ── */
+
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 480px) {
+  .team-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.stats-card__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.stats-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-card);
+  font-size: 14px;
+}
+
+.stats-card__row:last-child {
+  border-bottom: none;
+}
+
+.stats-card__stat-name {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.stats-card__stat-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── Team page tabs ── */
+
+.team-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-card);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.team-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.team-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.team-tab:hover {
+  color: var(--text-primary);
+}
+
+.team-tab--active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.team-tab-content {
+  display: none;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 15px;
+  padding: 48px 0;
+}
+
+.team-tab-content--active {
+  display: block;
+}
+
 /* ── Hamburger button ── */
 
 .hamburger {
