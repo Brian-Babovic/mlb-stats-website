@@ -32,25 +32,17 @@ function applyTheme(dark) {
   if (thumb) thumb.textContent = dark ? '☽' : '☀';
 }
 
-// ── Sidebar + toggle init ──────────────────────────────────────────────────
+// ── Sidebar init ───────────────────────────────────────────────────────────
 
 export function initSidebar() {
   const filename = location.pathname.split('/').pop().replace('.html', '') || 'index';
 
-  // ── Overlay ────────────────────────────────────────────────────────────
-  const overlay = document.createElement('div');
-  overlay.className = 'sidebar-overlay';
-  overlay.id = 'sidebar-overlay';
-
-  // ── Sidebar panel ──────────────────────────────────────────────────────
   const sidebar = document.createElement('aside');
   sidebar.className = 'sidebar';
   sidebar.id = 'sidebar';
-  sidebar.setAttribute('aria-hidden', 'true');
   sidebar.innerHTML = `
     <div class="sidebar__header">
-      <span class="sidebar__title">Menu</span>
-      <button class="sidebar__close" id="sidebar-close" aria-label="Close menu">&#x2715;</button>
+      <span class="sidebar__title">MLB Stats</span>
     </div>
     <nav class="sidebar__nav">
       ${NAV_LINKS.map(({ label, href, match, icon }) => `
@@ -60,54 +52,16 @@ export function initSidebar() {
         </a>
       `).join('')}
     </nav>
+    <div class="sidebar__footer">
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span class="theme-toggle__track">
+          <span class="theme-toggle__thumb" id="theme-toggle-thumb">${isDark() ? '☽' : '☀'}</span>
+        </span>
+      </button>
+    </div>
   `;
 
-  document.body.prepend(sidebar, overlay);
+  document.body.prepend(sidebar);
 
-  // ── Nav bar controls ───────────────────────────────────────────────────
-  const navBar = document.querySelector('.nav-bar');
-  if (navBar) {
-    // Hamburger
-    const hamburger = document.createElement('button');
-    hamburger.className = 'hamburger';
-    hamburger.id = 'menu-btn';
-    hamburger.setAttribute('aria-label', 'Open menu');
-    hamburger.setAttribute('aria-expanded', 'false');
-    hamburger.innerHTML = `<span></span><span></span><span></span>`;
-    navBar.prepend(hamburger);
-    hamburger.addEventListener('click', openSidebar);
-
-    // Theme toggle
-    const toggle = document.createElement('button');
-    toggle.className = 'theme-toggle';
-    toggle.id = 'theme-toggle';
-    toggle.setAttribute('aria-label', 'Toggle dark mode');
-    toggle.innerHTML = `
-      <span class="theme-toggle__track">
-        <span class="theme-toggle__thumb" id="theme-toggle-thumb">${isDark() ? '☽' : '☀'}</span>
-      </span>`;
-    navBar.append(toggle);
-    toggle.addEventListener('click', () => applyTheme(!isDark()));
-  }
-
-  // ── Sidebar open / close ───────────────────────────────────────────────
-  function openSidebar() {
-    sidebar.classList.add('sidebar--open');
-    overlay.classList.add('sidebar-overlay--visible');
-    document.body.classList.add('body--sidebar-open');
-    sidebar.setAttribute('aria-hidden', 'false');
-    document.getElementById('menu-btn')?.setAttribute('aria-expanded', 'true');
-  }
-
-  function closeSidebar() {
-    sidebar.classList.remove('sidebar--open');
-    overlay.classList.remove('sidebar-overlay--visible');
-    document.body.classList.remove('body--sidebar-open');
-    sidebar.setAttribute('aria-hidden', 'true');
-    document.getElementById('menu-btn')?.setAttribute('aria-expanded', 'false');
-  }
-
-  document.getElementById('sidebar-close').addEventListener('click', closeSidebar);
-  overlay.addEventListener('click', closeSidebar);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+  document.getElementById('theme-toggle').addEventListener('click', () => applyTheme(!isDark()));
 }

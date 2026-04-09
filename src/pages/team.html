@@ -9,10 +9,6 @@
 </head>
 <body>
   <div class="page">
-    <nav class="nav-bar">
-      <span class="nav-bar__title">Team</span>
-    </nav>
-
     <div id="team-container">
       <div class="loading">Loading&hellip;</div>
     </div>
@@ -60,7 +56,6 @@
 
     function render(team, standing, hitting, pitching, fielding) {
       document.title = team.name;
-      document.querySelector('.nav-bar__title').textContent = 'Team';
 
       const abbrev = (team.abbreviation ?? '').toLowerCase();
       const logoUrl = getLogoUrl(abbrev);
