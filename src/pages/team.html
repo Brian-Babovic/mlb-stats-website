@@ -20,7 +20,10 @@
 
   <script type="module">
     import { initSidebar } from '../components/sidebar.js';
-    import { fetchTeam, fetchTeamStats, fetchStandings, findTeamStanding, getLogoUrl } from '../utils/api.js';
+    import {
+      fetchTeam, fetchTeamStats, fetchStandings, findTeamStanding,
+      fetchTeamSchedule, getLogoUrl, getGameTime, getInningDisplay,
+    } from '../utils/api.js';
 
     initSidebar();
 
@@ -125,8 +128,8 @@
         </div>
 
         ${tabs.map((t, i) => `
-          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}" data-panel="${i}">
-            ${t} coming soon
+          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}${i === 0 ? ' team-tab-content--schedule' : ''}" data-panel="${i}" id="${i === 0 ? 'schedule-panel' : ''}">
+            ${i === 0 ? '<div class="loading">Loading schedule&hellip;</div>' : `${t} coming soon`}
           </div>`).join('')}
       `;
 
@@ -143,6 +146,106 @@
           });
         });
       });
+
+      // Load schedule tab
+      loadScheduleTab(teamId);
+    }
+
+    async function loadScheduleTab(teamId) {
+      const panel = document.getElementById('schedule-panel');
+      try {
+        const games = await fetchTeamSchedule(teamId);
+        if (!games.length) {
+          panel.innerHTML = '<div class="empty-state" style="padding:48px 0;text-align:center">No games found.</div>';
+          return;
+        }
+        panel.innerHTML = renderScheduleGames(games);
+        const anchor = panel.querySelector('#scroll-anchor');
+        if (anchor) panel.scrollTop = anchor.offsetTop - panel.offsetTop;
+      } catch (err) {
+        panel.innerHTML = `<div class="error-msg" style="padding:24px">Could not load schedule. ${err.message}</div>`;
+      }
+    }
+
+    function scheduleTeamRow(teamData, scoreClass, scoreStr) {
+      const id     = teamData.team.id;
+      const abbrRaw = teamData.team.abbreviation ?? '';
+      const abbr   = abbrRaw.toLowerCase();
+      const name   = teamData.team.name ?? '';
+      const logo   = `<img class="team-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
+      return `
+        <div class="team-row">
+          <span class="team-row__abbr">${abbrRaw}</span>
+          ${logo}
+          <div class="team-row__info">
+            <a class="team-row__name" href="/pages/team?id=${id}">${name}</a>
+          </div>
+          <span class="${scoreClass}">${scoreStr}</span>
+        </div>`;
+    }
+
+    function renderScheduleGame(game) {
+      const away = game.teams.away;
+      const home = game.teams.home;
+      const state = game.status?.abstractGameState;
+
+      const awayScore = away.score ?? null;
+      const homeScore = home.score ?? null;
+      const awayWon = awayScore !== null && homeScore !== null && awayScore > homeScore;
+      const homeWon = awayScore !== null && homeScore !== null && homeScore > awayScore;
+
+      const awayScoreClass = awayWon ? 'team-row__score team-row__score--winner' : 'team-row__score';
+      const homeScoreClass = homeWon ? 'team-row__score team-row__score--winner' : 'team-row__score';
+      const awayScoreStr = awayScore !== null ? awayScore : '-';
+      const homeScoreStr = homeScore !== null ? homeScore : '-';
+
+      const gameId = game.gamePk;
+
+      let statusHtml = '';
+      let linkText = '';
+
+      if (state === 'Live') {
+        const inning = getInningDisplay(game);
+        statusHtml = `
+          <div class="status-label status-label--live">
+            <span class="live-dot"></span> Live
+          </div>
+          <div class="inning-label">${inning}</div>`;
+        linkText = 'Follow live &rarr;';
+      } else if (state === 'Final') {
+        statusHtml = `<div class="status-label">Final</div>`;
+        linkText = 'Game recap &rarr;';
+      } else {
+        const time = getGameTime(game);
+        statusHtml = `<div class="status-label">${time}</div>`;
+        linkText = 'Game info &rarr;';
+      }
+
+      return `
+        <div class="game-card">
+          <div class="game-card__teams">
+            ${scheduleTeamRow(away, awayScoreClass, awayScoreStr)}
+            ${scheduleTeamRow(home, homeScoreClass, homeScoreStr)}
+          </div>
+          <div class="game-card__status">
+            ${statusHtml}
+            <a class="game-card__link" href="/pages/game?id=${gameId}">${linkText}</a>
+          </div>
+        </div>`;
+    }
+
+    function renderScheduleGames(games) {
+      const lastFinalIdx = games.reduce((last, g, i) =>
+        g.status?.abstractGameState === 'Final' ? i : last, -1);
+
+      let html = '';
+      for (let i = 0; i < games.length; i++) {
+        if (i === lastFinalIdx) html += '<div id="scroll-anchor"></div>';
+        html += renderScheduleGame(games[i]);
+      }
+      // If no final games, anchor at top
+      if (lastFinalIdx === -1) html = '<div id="scroll-anchor"></div>' + html;
+      return html;
     }
   </script>
 </body>

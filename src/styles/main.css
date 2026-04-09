@@ -453,6 +453,13 @@ a:hover {
   display: block;
 }
 
+.team-tab-content--schedule {
+  padding: 0;
+  text-align: left;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
 /* ── Hamburger button ── */
 
 .hamburger {

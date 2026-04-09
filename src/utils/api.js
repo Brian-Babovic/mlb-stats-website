@@ -41,6 +41,17 @@ export async function fetchSchedule(date) {
   return data.dates?.[0]?.games ?? [];
 }
 
+export async function fetchTeamSchedule(teamId) {
+  const year = new Date().getFullYear();
+  const url = `${MLB_API_BASE}/schedule?sportId=1&season=${year}&teamId=${teamId}&hydrate=linescore,team`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch team schedule: ${res.status}`);
+  const data = await res.json();
+  const games = (data.dates ?? []).flatMap(d => d.games ?? []);
+  games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+  return games;
+}
+
 export function formatDate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
