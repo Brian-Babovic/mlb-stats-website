@@ -124,14 +124,15 @@
 
     function teamRow(teamData, scoreClass, scoreStr, showRecord) {
       const id    = teamData.team.id;
-      const abbr  = teamData.team.abbreviation ?? '';
+      const abbrRaw = teamData.team.abbreviation ?? '';
+      const abbr  = abbrRaw.toLowerCase();
       const name  = teamData.team.name ?? '';
       const rec   = teamData.leagueRecord;
       const record = (showRecord && rec) ? `<span class="team-row__record">(${rec.wins}-${rec.losses})</span>` : '';
       const logo  = `<img class="team-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
       return `
         <div class="team-row">
-          <span class="team-row__abbr">${abbr}</span>
+          <span class="team-row__abbr">${abbrRaw}</span>
           ${logo}
           <div class="team-row__info">
             <a class="team-row__name" href="team.html?id=${id}">${name}</a>

@@ -2,7 +2,7 @@ const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
 export async function fetchSchedule(date) {
   const dateStr = formatDate(date);
-  const url = `${MLB_API_BASE}/schedule?sportId=1&date=${dateStr}&hydrate=linescore`;
+  const url = `${MLB_API_BASE}/schedule?sportId=1&date=${dateStr}&hydrate=linescore,team`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch schedule: ${res.status}`);
   const data = await res.json();
@@ -42,7 +42,15 @@ export function getGameTime(game) {
 }
 
 export function getLogoUrl(abbrev) {
-  return `https://a.espncdn.com/i/teamlogos/mlb/500/${abbrev.toLowerCase()}.png`;
+  const abbrevMap = {
+    'az': 'ari',
+    'kc': 'kc',
+    'sf': 'sf',
+    'tb': 'tb',
+    'wsh': 'wsh',
+  };
+  const espnAbbr = abbrevMap[abbrev] ?? abbrev;
+  return `https://a.espncdn.com/i/teamlogos/mlb/500/${espnAbbr}.png`;
 }
 
 export function getInningDisplay(game) {
