@@ -66,6 +66,78 @@ a:hover {
   padding: 24px 16px 48px;
 }
 
+/* ── Home page ── */
+
+.page--home {
+  max-width: 860px;
+}
+
+.home-hero {
+  margin-bottom: 32px;
+}
+
+.home-hero__title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.home-hero__sub {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.nav-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.nav-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.nav-card__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.nav-card__desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
 /* ── Date picker ── */
 
 .date-nav {
