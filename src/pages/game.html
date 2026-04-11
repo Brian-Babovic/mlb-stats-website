@@ -211,6 +211,9 @@
           ? `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${batterId}/headshot/67/current`
           : '';
 
+        const awayScored = isScoring && isTop;
+        const homeScored = isScoring && !isTop;
+
         let scoringStyle = '';
         if (isScoring) {
           const color = TEAM_COLORS[logoAbbr] ?? '#16a34a';
@@ -225,7 +228,13 @@
               ${orderLabel != null ? `<span class="pbp-play__order-badge">${orderLabel}</span>` : ''}
             </div>
             <span class="pbp-play__desc">${desc}</span>
-            <span class="pbp-play__score">${awayS}–${homeS}</span>
+            <div class="pbp-play__score-block">
+              <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="16" height="16" onerror="this.style.display='none'">
+              <span class="pbp-play__score-num${awayScored ? ' pbp-play__score-num--scored' : ''}">${awayS}</span>
+              <span class="pbp-play__score-sep">–</span>
+              <span class="pbp-play__score-num${homeScored ? ' pbp-play__score-num--scored' : ''}">${homeS}</span>
+              <img class="pbp-play__score-logo" src="${getLogoUrl(homeAbbr)}" alt="" width="16" height="16" onerror="this.style.display='none'">
+            </div>
           </div>`;
       }
 
