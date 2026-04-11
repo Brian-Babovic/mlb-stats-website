@@ -141,61 +141,71 @@
 
       if (!plays.length) return;
 
-      // Group plays into half-innings in order
-      const halfInnings = [];
-      const seen = new Map();
+      const awayAbbr  = (away.abbreviation ?? '').toLowerCase();
+      const homeAbbr  = (home.abbreviation ?? '').toLowerCase();
+      const awayOrder = feed.liveData?.boxscore?.teams?.away?.battingOrder ?? [];
+      const homeOrder = feed.liveData?.boxscore?.teams?.home?.battingOrder ?? [];
+
+      function lineupPos(batterId, isTop) {
+        const order = isTop ? awayOrder : homeOrder;
+        const idx = order.indexOf(batterId);
+        return idx >= 0 ? idx + 1 : null;
+      }
+
+      function formatName(fullName, pos) {
+        const parts   = fullName.trim().split(' ');
+        const initial = parts[0]?.[0] ?? '';
+        const last    = parts.slice(1).join(' ');
+        const prefix  = pos != null ? `${pos}) ` : '';
+        return `${prefix}${initial}. ${last}`;
+      }
+
+      // Group by inning number, preserving play order (top then bottom naturally)
+      const innings = new Map();
       for (const play of plays) {
         if (!play.about.isComplete) continue;
-        const key = `${play.about.inning}-${play.about.halfInning}`;
-        if (!seen.has(key)) {
-          seen.set(key, halfInnings.length);
-          halfInnings.push({ inning: play.about.inning, half: play.about.halfInning, plays: [] });
-        }
-        halfInnings[seen.get(key)].plays.push(play);
+        const num = play.about.inning;
+        if (!innings.has(num)) innings.set(num, []);
+        innings.get(num).push(play);
       }
 
       let html = '';
-      for (const group of halfInnings) {
-        const isTop    = group.half === 'top';
-        const arrow    = isTop ? '▲' : '▼';
-        const halfLabel = `${arrow} ${ordinal(group.inning).toUpperCase()}`;
-        const battingTeam = isTop ? away.abbreviation : home.abbreviation;
-
-        const playRows = group.plays.map(play => {
-          const batter   = play.matchup?.batter;
-          const event    = play.result?.event ?? '';
-          const desc     = play.result?.description ?? '';
+      for (const [inningNum, inningPlays] of innings) {
+        const playRows = inningPlays.map(play => {
+          const isTop     = play.about.halfInning === 'top';
+          const logoAbbr  = isTop ? awayAbbr : homeAbbr;
+          const batter    = play.matchup?.batter;
+          const batterId  = batter?.id;
+          const fullName  = batter?.fullName ?? '';
+          const pos       = batterId != null ? lineupPos(batterId, isTop) : null;
+          const desc      = play.result?.description ?? '';
+          const awayS     = play.result?.awayScore ?? 0;
+          const homeS     = play.result?.homeScore ?? 0;
           const isScoring = play.about.isScoringPlay;
-          const rbi      = play.result?.rbi ?? 0;
-          const awayS    = play.result?.awayScore ?? 0;
-          const homeS    = play.result?.homeScore ?? 0;
 
-          const eventClass = isScoring ? 'pbp-event pbp-event--scoring' : 'pbp-event';
-
-          const scoreBadge = isScoring
-            ? `<span class="pbp-score-badge">${away.abbreviation} ${awayS}, ${home.abbreviation} ${homeS}${rbi ? ` &middot; ${rbi} RBI` : ''}</span>`
+          const nameStr  = fullName ? formatName(fullName, pos) : '';
+          const nameCell = batter
+            ? `<a class="pbp-batter" href="/pages/player?id=${batter.id}">${nameStr}</a>`
             : '';
 
-          const batterLink = batter
-            ? `<a class="pbp-batter" href="/pages/player?id=${batter.id}">${batter.fullName}</a>`
+          const photoSrc = batterId
+            ? `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${batterId}/headshot/67/current`
             : '';
 
           return `
             <div class="pbp-play${isScoring ? ' pbp-play--scoring' : ''}">
-              <div class="pbp-play__top">
-                ${batterLink}
-                <span class="${eventClass}">${event}</span>
-              </div>
-              <div class="pbp-play__desc">${desc}</div>
-              ${scoreBadge}
+              <img class="pbp-play__team-logo" src="${getLogoUrl(logoAbbr)}" alt="" onerror="this.style.display='none'">
+              <img class="pbp-play__photo" src="${photoSrc}" alt="" onerror="this.style.opacity='0'">
+              <span class="pbp-play__name">${nameCell}</span>
+              <span class="pbp-play__desc">${desc}</span>
+              <span class="pbp-play__score">${awayS}–${homeS}</span>
             </div>`;
         }).join('');
 
         html += `
           <div class="pbp-inning">
             <div class="pbp-inning__header">
-              <span class="pbp-inning__label">${halfLabel}</span>
-              <span class="pbp-inning__team">${battingTeam}</span>
+              <span class="pbp-inning__label">${ordinal(inningNum).toUpperCase()}</span>
             </div>
             ${playRows}
           </div>`;
