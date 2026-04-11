@@ -9,17 +9,119 @@
 </head>
 <body>
   <div class="page">
-    <div class="stub-page">
-      <h1 id="heading">Game page</h1>
-      <p>Game page coming soon</p>
+    <div id="game-container">
+      <div class="loading">Loading game&hellip;</div>
     </div>
   </div>
+
   <script type="module">
     import { initSidebar } from '../components/sidebar.js';
+    import { fetchGameFeed, getLogoUrl } from '../utils/api.js';
+
     initSidebar();
 
-    const id = new URLSearchParams(location.search).get('id');
-    if (id) document.getElementById('heading').textContent = `Game #${id}`;
+    const gamePk = new URLSearchParams(location.search).get('id');
+    const container = document.getElementById('game-container');
+
+    if (!gamePk) {
+      container.innerHTML = '<div class="error-msg">No game ID specified.</div>';
+    } else {
+      load(gamePk);
+    }
+
+    async function load(id) {
+      try {
+        const feed = await fetchGameFeed(id);
+        const state = feed.gameData?.status?.abstractGameState;
+
+        if (state !== 'Final') {
+          container.innerHTML = '<div class="empty-state">Live and upcoming game pages coming soon.</div>';
+          return;
+        }
+
+        render(feed);
+      } catch (err) {
+        container.innerHTML = `<div class="error-msg">Could not load game. ${err.message}</div>`;
+      }
+    }
+
+    function render(feed) {
+      const gameData = feed.gameData;
+      const away = gameData.teams.away;
+      const home = gameData.teams.home;
+
+      const awayAbbr = (away.abbreviation ?? '').toLowerCase();
+      const homeAbbr = (home.abbreviation ?? '').toLowerCase();
+
+      const linescore = feed.liveData?.linescore ?? {};
+      const awayScore = linescore.teams?.away?.runs ?? 0;
+      const homeScore = linescore.teams?.home?.runs ?? 0;
+      const awayWon = awayScore > homeScore;
+      const homeWon = homeScore > awayScore;
+
+      const venue = gameData.venue?.name ?? '';
+      const dateStr = gameData.datetime?.originalDate ?? '';
+      const dateDisplay = dateStr
+        ? new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+        : '';
+
+      const innings = linescore.currentInning ?? 9;
+      const finalLabel = innings > 9 ? `Final/${innings}` : 'Final';
+
+      const tabs = [
+        { key: 'pbp',  label: 'PBP' },
+        { key: 'game', label: 'Game' },
+        { key: 'away', label: away.abbreviation ?? 'Away' },
+        { key: 'home', label: home.abbreviation ?? 'Home' },
+      ];
+
+      document.title = `${away.abbreviation} vs ${home.abbreviation}`;
+
+      container.innerHTML = `
+        <div class="game-header">
+          <div class="game-header__meta">${dateDisplay}${venue ? ` &middot; ${venue}` : ''}</div>
+          <div class="game-header__matchup">
+            <div class="game-header__team">
+              <img class="game-header__logo" src="${getLogoUrl(awayAbbr)}" alt="" onerror="this.style.display='none'">
+              <a class="game-header__team-name${awayWon ? ' game-header__team-name--winner' : ''}" href="/pages/team?id=${away.id}">${away.name}</a>
+            </div>
+            <div class="game-header__score">
+              <span class="${awayWon ? 'game-header__score-num game-header__score-num--winner' : 'game-header__score-num'}">${awayScore}</span>
+              <span class="game-header__score-sep">${finalLabel}</span>
+              <span class="${homeWon ? 'game-header__score-num game-header__score-num--winner' : 'game-header__score-num'}">${homeScore}</span>
+            </div>
+            <div class="game-header__team game-header__team--home">
+              <img class="game-header__logo" src="${getLogoUrl(homeAbbr)}" alt="" onerror="this.style.display='none'">
+              <a class="game-header__team-name${homeWon ? ' game-header__team-name--winner' : ''}" href="/pages/team?id=${home.id}">${home.name}</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-tabs" role="tablist">
+          ${tabs.map((t, i) => `
+            <button class="team-tab${i === 0 ? ' team-tab--active' : ''}" role="tab" data-tab="${t.key}" aria-selected="${i === 0}">${t.label}</button>
+          `).join('')}
+        </div>
+
+        ${tabs.map((t, i) => `
+          <div class="team-tab-content${i === 0 ? ' team-tab-content--active' : ''}" data-panel="${t.key}">
+            <div class="empty-state">${t.label} coming soon.</div>
+          </div>
+        `).join('')}
+      `;
+
+      container.querySelectorAll('.team-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.team-tab').forEach(b => {
+            b.classList.toggle('team-tab--active', b === btn);
+            b.setAttribute('aria-selected', b === btn);
+          });
+          container.querySelectorAll('.team-tab-content').forEach(p => {
+            p.classList.toggle('team-tab-content--active', p.dataset.panel === btn.dataset.tab);
+          });
+        });
+      });
+    }
   </script>
 </body>
 </html>

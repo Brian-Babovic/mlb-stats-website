@@ -149,6 +149,12 @@ export function getLogoUrl(abbrev) {
   return `https://a.espncdn.com/i/teamlogos/mlb/500/${espnAbbr}.png`;
 }
 
+export async function fetchGameFeed(gamePk) {
+  const res = await fetch(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
+  if (!res.ok) throw new Error(`Failed to fetch game: ${res.status}`);
+  return res.json();
+}
+
 export function getInningDisplay(game) {
   const ls = game.linescore;
   if (!ls) return '';
