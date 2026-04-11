@@ -927,6 +927,97 @@ a:hover {
   font-weight: 600;
 }
 
+/* ── Playoff picture ── */
+
+.playoff-seed {
+  width: 28px;
+  text-align: center !important;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding-left: 10px !important;
+}
+
+.playoff-in-row td {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.playoff-bubble-row td {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.playoff-bubble-row .standings-team a {
+  color: var(--text-muted);
+}
+
+.playoff-tag-cell {
+  text-align: right !important;
+  padding-right: 6px !important;
+}
+
+.playoff-gb {
+  text-align: right !important;
+  padding-right: 14px !important;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.playoff-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.playoff-tag--div {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+[data-theme="dark"] .playoff-tag--div {
+  background: rgba(91, 156, 246, 0.15);
+  color: #5b9cf6;
+}
+
+.playoff-tag--wc {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+
+[data-theme="dark"] .playoff-tag--wc {
+  background: rgba(22, 163, 74, 0.18);
+  color: #4ade80;
+}
+
+.playoff-tag--elim {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.playoff-divider-row td {
+  border-top: 1px solid var(--border-card);
+  padding: 0 !important;
+}
+
+.playoff-divider-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 14px 4px !important;
+  text-align: left !important;
+}
+
+.playoff-table .standings-team {
+  font-size: 13px;
+}
+
 /* ── Stub pages ── */
 
 .stub-page {

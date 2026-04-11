@@ -10,7 +10,16 @@
 <body>
   <div class="page">
     <h1 class="page-title">Standings</h1>
-    <div id="standings-container">
+
+    <div class="team-tabs" role="tablist">
+      <button class="team-tab team-tab--active" role="tab" data-tab="divisions" aria-selected="true">Divisions</button>
+      <button class="team-tab" role="tab" data-tab="playoff" aria-selected="false">Playoff Picture</button>
+    </div>
+
+    <div id="tab-divisions" class="standings-tab-panel">
+      <div class="loading">Loading standings&hellip;</div>
+    </div>
+    <div id="tab-playoff" class="standings-tab-panel" style="display:none">
       <div class="loading">Loading standings&hellip;</div>
     </div>
   </div>
@@ -21,7 +30,20 @@
 
     initSidebar();
 
-    // Division display order: AL then NL, West/Central/East each league
+    // ── Tab switching ──────────────────────────────────────────────────────────
+    document.querySelectorAll('.team-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.team-tab').forEach(b => {
+          b.classList.toggle('team-tab--active', b === btn);
+          b.setAttribute('aria-selected', b === btn);
+        });
+        document.querySelectorAll('.standings-tab-panel').forEach(p => {
+          p.style.display = p.id === `tab-${btn.dataset.tab}` ? '' : 'none';
+        });
+      });
+    });
+
+    // ── Division order ─────────────────────────────────────────────────────────
     const DIVISION_ORDER = [
       { id: 201, label: 'AL East' },
       { id: 202, label: 'AL Central' },
@@ -31,32 +53,43 @@
       { id: 203, label: 'NL West' },
     ];
 
+    const DIVISION_NAMES = {
+      200: 'AL West', 201: 'AL East', 202: 'AL Central',
+      203: 'NL West', 204: 'NL East', 205: 'NL Central',
+    };
+
     async function load() {
-      const container = document.getElementById('standings-container');
       try {
         const data = await fetchStandings();
-        const byDivision = {};
-        for (const record of data.records ?? []) {
-          byDivision[record.division.id] = record.teamRecords ?? [];
-        }
-
-        let html = '<div class="standings-grid">';
-        for (const div of DIVISION_ORDER) {
-          const teams = byDivision[div.id] ?? [];
-          html += renderDivision(div.label, teams);
-        }
-        html += '</div>';
-        container.innerHTML = html;
+        renderDivisionsTab(data);
+        renderPlayoffTab(data);
       } catch (err) {
-        container.innerHTML = `<div class="error-msg">Could not load standings. ${err.message}</div>`;
+        document.getElementById('tab-divisions').innerHTML =
+          `<div class="error-msg">Could not load standings. ${err.message}</div>`;
+        document.getElementById('tab-playoff').innerHTML =
+          `<div class="error-msg">Could not load standings. ${err.message}</div>`;
       }
     }
 
+    // ── Divisions tab ──────────────────────────────────────────────────────────
+
     function getLastTen(teamRecord) {
-      const splits = teamRecord.records?.splitRecords ?? [];
-      const l10 = splits.find(s => s.type === 'lastTen');
-      if (!l10) return '—';
-      return `${l10.wins}-${l10.losses}`;
+      const l10 = (teamRecord.records?.splitRecords ?? []).find(s => s.type === 'lastTen');
+      return l10 ? `${l10.wins}-${l10.losses}` : '—';
+    }
+
+    function renderDivisionsTab(data) {
+      const byDivision = {};
+      for (const record of data.records ?? []) {
+        byDivision[record.division.id] = record.teamRecords ?? [];
+      }
+
+      let html = '<div class="standings-grid">';
+      for (const div of DIVISION_ORDER) {
+        html += renderDivision(div.label, byDivision[div.id] ?? []);
+      }
+      html += '</div>';
+      document.getElementById('tab-divisions').innerHTML = html;
     }
 
     function renderDivision(label, teams) {
@@ -66,9 +99,7 @@
         const logo = `<img class="standings-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
         const gb = t.gamesBack === '-' ? '—' : t.gamesBack;
         const streak = t.streak?.streakCode ?? '—';
-        const streakIsWin = streak.startsWith('W');
-        const streakClass = streak === '—' ? '' : streakIsWin ? ' streak--w' : ' streak--l';
-        const l10 = getLastTen(t);
+        const streakClass = streak === '—' ? '' : streak.startsWith('W') ? ' streak--w' : ' streak--l';
         const pct = t.winningPercentage ?? '.000';
         const isLeader = t.divisionRank === '1';
 
@@ -83,7 +114,7 @@
             <td>${pct}</td>
             <td>${gb}</td>
             <td><span class="streak-text${streakClass}">${streak}</span></td>
-            <td>${l10}</td>
+            <td>${getLastTen(t)}</td>
           </tr>`;
       }).join('');
 
@@ -94,15 +125,111 @@
             <thead>
               <tr>
                 <th class="standings-th--team">Team</th>
-                <th>W</th>
-                <th>L</th>
-                <th>PCT</th>
-                <th>GB</th>
-                <th>STRK</th>
-                <th>L10</th>
+                <th>W</th><th>L</th><th>PCT</th><th>GB</th><th>STRK</th><th>L10</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    // ── Playoff Picture tab ────────────────────────────────────────────────────
+
+    function renderPlayoffTab(data) {
+      const alTeams = [], nlTeams = [];
+      for (const record of data.records ?? []) {
+        const leagueId = record.league?.id;
+        const divId = record.division?.id;
+        for (const t of record.teamRecords ?? []) {
+          const entry = { ...t, divisionName: DIVISION_NAMES[divId] };
+          if (leagueId === 103) alTeams.push(entry);
+          else if (leagueId === 104) nlTeams.push(entry);
+        }
+      }
+
+      const html = `
+        <div class="standings-grid">
+          ${renderLeaguePicture('American League', alTeams)}
+          ${renderLeaguePicture('National League', nlTeams)}
+        </div>`;
+      document.getElementById('tab-playoff').innerHTML = html;
+    }
+
+    function renderLeaguePicture(leagueLabel, teams) {
+      // Division winners: divisionRank === '1', sorted by wins desc
+      const divWinners = teams
+        .filter(t => t.divisionRank === '1')
+        .sort((a, b) => b.wins - a.wins);
+
+      // All non-division leaders sorted by wild card rank, then wins
+      const wcEligible = teams
+        .filter(t => t.divisionRank !== '1')
+        .sort((a, b) => {
+          const ra = parseInt(a.wildCardRank) || 999;
+          const rb = parseInt(b.wildCardRank) || 999;
+          if (ra !== rb) return ra - rb;
+          return b.wins - a.wins;
+        });
+
+      const divWinnerRows = divWinners.map((t, i) => {
+        const team = t.team;
+        const abbr = (team.abbreviation ?? '').toLowerCase();
+        const logo = `<img class="standings-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
+        const tag = `<span class="playoff-tag playoff-tag--div">${t.divisionName}</span>`;
+
+        return `
+          <tr class="playoff-in-row">
+            <td class="playoff-seed">${i + 1}</td>
+            <td class="standings-team">${logo}<a href="/pages/team?id=${team.id}">${team.name}</a></td>
+            <td>${t.wins}–${t.losses}</td>
+            <td class="playoff-tag-cell">${tag}</td>
+            <td class="playoff-gb"></td>
+          </tr>`;
+      }).join('');
+
+      const wcRows = wcEligible.map((t, i) => {
+        const team = t.team;
+        const abbr = (team.abbreviation ?? '').toLowerCase();
+        const logo = `<img class="standings-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
+        const inPlayoffs = i < 3;
+        const tag = inPlayoffs
+          ? `<span class="playoff-tag playoff-tag--wc">WC${i + 1}</span>`
+          : (t.wildCardEliminationNumber === 'E' ? `<span class="playoff-tag playoff-tag--elim">E</span>` : '');
+        const gb = t.wildCardGamesBack === '-' || !t.wildCardGamesBack
+          ? (inPlayoffs ? '+0.0' : '—')
+          : (inPlayoffs ? `+${t.wildCardGamesBack}` : `${t.wildCardGamesBack} GB`);
+        const rowClass = inPlayoffs ? 'playoff-in-row' : 'playoff-bubble-row';
+
+        return `
+          <tr class="${rowClass}">
+            <td class="playoff-seed"></td>
+            <td class="standings-team">${logo}<a href="/pages/team?id=${team.id}">${team.name}</a></td>
+            <td>${t.wins}–${t.losses}</td>
+            <td class="playoff-tag-cell">${tag}</td>
+            <td class="playoff-gb">${gb}</td>
+          </tr>`;
+      }).join('');
+
+      const dividerRow = `<tr class="playoff-divider-row"><td colspan="5" class="playoff-divider-label">Wild Card</td></tr>`;
+
+      return `
+        <div class="standings-division">
+          <div class="standings-division__title">${leagueLabel}</div>
+          <table class="standings-table playoff-table">
+            <thead>
+              <tr>
+                <th style="width:28px"></th>
+                <th class="standings-th--team">Team</th>
+                <th>Record</th>
+                <th></th>
+                <th>WC GB</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${divWinnerRows}
+              ${dividerRow}
+              ${wcRows}
+            </tbody>
           </table>
         </div>`;
     }
