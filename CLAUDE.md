@@ -54,6 +54,10 @@ src/
 - **Teams page** — browse all 30 teams
 - **Player page** — individual player stats and info
 
+## Interactions
+
+- When asked for a **git message**, respond with the full command: `git commit -m "message"` with an appropriate message reflecting the recent work
+
 ## Conventions
 
 - All API calls go through `src/utils/api.js`
