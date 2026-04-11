@@ -9,15 +9,105 @@
 </head>
 <body>
   <div class="page">
-    <div class="stub-page">
-      <h1>Standings</h1>
-      <p>Standings page coming soon.</p>
+    <h1 class="page-title">Standings</h1>
+    <div id="standings-container">
+      <div class="loading">Loading standings&hellip;</div>
     </div>
   </div>
 
   <script type="module">
     import { initSidebar } from '../components/sidebar.js';
+    import { fetchStandings, getLogoUrl } from '../utils/api.js';
+
     initSidebar();
+
+    // Division display order: AL then NL, West/Central/East each league
+    const DIVISION_ORDER = [
+      { id: 201, label: 'AL East' },
+      { id: 202, label: 'AL Central' },
+      { id: 200, label: 'AL West' },
+      { id: 204, label: 'NL East' },
+      { id: 205, label: 'NL Central' },
+      { id: 203, label: 'NL West' },
+    ];
+
+    async function load() {
+      const container = document.getElementById('standings-container');
+      try {
+        const data = await fetchStandings();
+        const byDivision = {};
+        for (const record of data.records ?? []) {
+          byDivision[record.division.id] = record.teamRecords ?? [];
+        }
+
+        let html = '<div class="standings-grid">';
+        for (const div of DIVISION_ORDER) {
+          const teams = byDivision[div.id] ?? [];
+          html += renderDivision(div.label, teams);
+        }
+        html += '</div>';
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="error-msg">Could not load standings. ${err.message}</div>`;
+      }
+    }
+
+    function getLastTen(teamRecord) {
+      const splits = teamRecord.records?.splitRecords ?? [];
+      const l10 = splits.find(s => s.type === 'lastTen');
+      if (!l10) return '—';
+      return `${l10.wins}-${l10.losses}`;
+    }
+
+    function renderDivision(label, teams) {
+      const rows = teams.map(t => {
+        const team = t.team;
+        const abbr = (team.abbreviation ?? '').toLowerCase();
+        const logo = `<img class="standings-logo" src="${getLogoUrl(abbr)}" alt="" onerror="this.style.display='none'">`;
+        const gb = t.gamesBack === '-' ? '—' : t.gamesBack;
+        const streak = t.streak?.streakCode ?? '—';
+        const streakIsWin = streak.startsWith('W');
+        const streakClass = streak === '—' ? '' : streakIsWin ? ' streak--w' : ' streak--l';
+        const l10 = getLastTen(t);
+        const pct = t.winningPercentage ?? '.000';
+        const isLeader = t.divisionRank === '1';
+
+        return `
+          <tr class="${isLeader ? 'standings-leader' : ''}">
+            <td class="standings-team">
+              ${logo}
+              <a href="/pages/team?id=${team.id}">${team.name}</a>
+            </td>
+            <td>${t.wins}</td>
+            <td>${t.losses}</td>
+            <td>${pct}</td>
+            <td>${gb}</td>
+            <td><span class="streak-text${streakClass}">${streak}</span></td>
+            <td>${l10}</td>
+          </tr>`;
+      }).join('');
+
+      return `
+        <div class="standings-division">
+          <div class="standings-division__title">${label}</div>
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th class="standings-th--team">Team</th>
+                <th>W</th>
+                <th>L</th>
+                <th>PCT</th>
+                <th>GB</th>
+                <th>STRK</th>
+                <th>L10</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    load();
   </script>
 </body>
 </html>

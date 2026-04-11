@@ -809,6 +809,124 @@ a:hover {
   border-top: 1px solid var(--border-card);
 }
 
+/* ── Standings page ── */
+
+.page--wide {
+  max-width: 1100px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+}
+
+.standings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.standings-division {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.standings-division__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.standings-table thead th {
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-align: center;
+  background: var(--bg-card);
+}
+
+.standings-th--team {
+  text-align: left !important;
+  padding-left: 14px !important;
+}
+
+.standings-table td {
+  padding: 7px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-card);
+  color: var(--text-secondary);
+}
+
+.standings-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.standings-table tbody tr:hover td {
+  background: var(--bg-btn-hover);
+}
+
+.standings-leader td {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.standings-team {
+  text-align: left !important;
+  padding-left: 14px !important;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.standings-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.standings-team a {
+  color: inherit;
+  font-weight: 500;
+}
+
+.standings-team a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.streak-text {
+  font-size: 12px;
+}
+
+.streak--w {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.streak--l {
+  color: #dc2626;
+  font-weight: 600;
+}
+
 /* ── Stub pages ── */
 
 .stub-page {
