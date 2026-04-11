@@ -61,7 +61,7 @@ a:hover {
 /* ── Layout ── */
 
 .page {
-  max-width: 700px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 24px 16px 48px;
 }
@@ -69,7 +69,7 @@ a:hover {
 /* ── Home page ── */
 
 .page--home {
-  max-width: 860px;
+  max-width: 1000px;
 }
 
 .home-hero {
@@ -829,21 +829,36 @@ a:hover {
 .pbp-inning__header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px 6px;
+  padding: 14px 16px 12px;
   position: sticky;
   top: 0;
-  background: var(--bg-page);
+  background: var(--bg-card);
   z-index: 1;
-  border-bottom: 1px solid var(--border-card);
+  border-bottom: 2px solid var(--border-card);
+  border-top: 1px solid var(--border-card);
+}
+
+.pbp-inning:first-child .pbp-inning__header {
+  border-top: none;
 }
 
 .pbp-inning__label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-primary);
+}
+
+.pbp-half-header {
+  padding: 6px 14px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border-card);
 }
 
 .pbp-play {
@@ -859,13 +874,13 @@ a:hover {
 }
 
 .pbp-play--scoring {
-  background: rgba(22, 163, 74, 0.05);
-  border-left: 3px solid #16a34a;
+  background: var(--scoring-bg, rgba(22, 163, 74, 0.06));
+  border-left: 3px solid var(--scoring-color, #16a34a);
   padding-left: 11px;
 }
 
 [data-theme="dark"] .pbp-play--scoring {
-  background: rgba(22, 163, 74, 0.08);
+  background: var(--scoring-bg-dark, rgba(22, 163, 74, 0.12));
 }
 
 .pbp-play__team-logo {
@@ -875,32 +890,34 @@ a:hover {
   flex-shrink: 0;
 }
 
+.pbp-play__photo-wrap {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
 .pbp-play__photo {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
   background: var(--bg-card);
 }
 
-.pbp-play__name {
-  width: 130px;
-  flex-shrink: 0;
+.pbp-play__order-badge {
+  position: absolute;
+  bottom: -3px;
+  left: -4px;
+  background: var(--text-primary);
+  color: var(--bg-page);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 5px;
+  border: 1.5px solid var(--bg-page);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pbp-batter {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-decoration: none;
-}
-
-.pbp-batter:hover {
-  text-decoration: underline;
 }
 
 .pbp-play__desc {
