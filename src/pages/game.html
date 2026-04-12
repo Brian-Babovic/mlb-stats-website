@@ -371,13 +371,13 @@
       const panel = container.querySelector('[data-panel="pbp"]');
       panel.innerHTML = `
         <div class="pbp-wrapper">
+          <div class="pbp-content">${html}</div>
           <nav class="pbp-nav">
             ${hasExtras ? '<button class="pbp-nav__arrow pbp-nav__arrow--up" style="display:none"><span class="pbp-nav__arrow-label">1–9</span>↑</button>' : ''}
             <div class="pbp-nav__page pbp-nav__page--regular">${buildNavPage(regularInnings)}</div>
             ${hasExtras ? `<div class="pbp-nav__page pbp-nav__page--extra" style="display:none">${buildNavPage(extraInnings)}</div>` : ''}
             ${hasExtras ? `<button class="pbp-nav__arrow pbp-nav__arrow--down">↓<span class="pbp-nav__arrow-label">${extraInnings[0]}–${extraInnings[extraInnings.length-1]}</span></button>` : ''}
           </nav>
-          <div class="pbp-content">${html}</div>
         </div>
       `;
 
