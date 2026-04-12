@@ -816,6 +816,35 @@ a:hover {
   text-align: left;
   max-height: 600px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s;
+}
+
+.team-tab-content--pbp:hover {
+  scrollbar-color: rgba(128, 128, 128, 0.4) transparent;
+}
+
+.team-tab-content--pbp::-webkit-scrollbar {
+  width: 6px;
+}
+
+.team-tab-content--pbp::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.team-tab-content--pbp::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.3s;
+}
+
+.team-tab-content--pbp:hover::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.4);
+}
+
+.team-tab-content--pbp::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.7);
 }
 
 /* ── PBP nav ── */
