@@ -282,7 +282,7 @@
         const outLabel = `${outs} ${outs === 1 ? 'out' : 'outs'}`;
 
         return `
-          <div class="pbp-play${isScoring ? ' pbp-play--scoring' : ''}">
+          <div id="pbp-play-${play.about.atBatIndex}" class="pbp-play${isScoring ? ' pbp-play--scoring' : ''}">
             <img class="pbp-play__team-logo" src="${getLogoUrl(logoAbbr)}" alt="" onerror="this.style.display='none'">
             <div class="pbp-play__photo-wrap">
               <img class="pbp-play__photo" src="${photoSrc}" alt="" onerror="this.style.opacity='0'">
@@ -310,16 +310,21 @@
         if (half in innings.get(num)) innings.get(num)[half].push(play);
       }
 
+      // Build content HTML and nav items together
+      const navItems = [];
       let html = '';
+
       for (const [inningNum, halves] of innings) {
         let halvesHtml = '';
-        if (halves.top.length) {
-          halvesHtml += `<div class="pbp-half-header">Top ${inningNum}</div>`;
-          halvesHtml += halves.top.map(p => buildPlayRow(p, true)).join('');
-        }
-        if (halves.bottom.length) {
-          halvesHtml += `<div class="pbp-half-header">Bottom ${inningNum}</div>`;
-          halvesHtml += halves.bottom.map(p => buildPlayRow(p, false)).join('');
+
+        for (const [half, halfPlays] of [['top', halves.top], ['bottom', halves.bottom]]) {
+          if (!halfPlays.length) continue;
+
+          const startId = `pbp-play-${halfPlays[0].about.atBatIndex}`;
+          navItems.push({ inningNum, half, startId });
+
+          halvesHtml += `<div class="pbp-half-header">${half === 'top' ? 'Top' : 'Bottom'} ${inningNum}</div>`;
+          halvesHtml += halfPlays.map(p => buildPlayRow(p, half === 'top')).join('');
         }
 
         html += `
@@ -331,7 +336,61 @@
           </div>`;
       }
 
-      container.querySelector('[data-panel="pbp"]').innerHTML = html;
+      // Split nav items into regular (1-9) and extra innings (10+)
+      const regularItems = navItems.filter(x => x.inningNum <= 9);
+      const extraItems   = navItems.filter(x => x.inningNum > 9);
+      const hasExtras    = extraItems.length > 0;
+
+      function navRow({ inningNum, half, startId }) {
+        const label = `${half === 'top' ? 'T' : 'B'}${inningNum}`;
+        return `
+          <div class="pbp-nav__half${half === 'bottom' ? ' pbp-nav__half--bottom' : ''}">
+            <span class="pbp-nav__label">${label}</span>
+            <button class="pbp-nav__dot" data-target="${startId}" title="${label}"></button>
+          </div>`;
+      }
+
+      const panel = container.querySelector('[data-panel="pbp"]');
+      panel.innerHTML = `
+        <div class="pbp-wrapper">
+          <nav class="pbp-nav">
+            ${hasExtras ? '<button class="pbp-nav__arrow pbp-nav__arrow--up" style="display:none">↑</button>' : ''}
+            <div class="pbp-nav__page pbp-nav__page--regular">${regularItems.map(navRow).join('')}</div>
+            ${hasExtras ? `<div class="pbp-nav__page pbp-nav__page--extra" style="display:none">${extraItems.map(navRow).join('')}</div>` : ''}
+            ${hasExtras ? '<button class="pbp-nav__arrow pbp-nav__arrow--down">↓</button>' : ''}
+          </nav>
+          <div class="pbp-content">${html}</div>
+        </div>
+      `;
+
+      // Dot click → scroll to play
+      panel.querySelectorAll('.pbp-nav__dot[data-target]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const el = document.getElementById(btn.dataset.target);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      // Arrow pagination
+      const upArrow    = panel.querySelector('.pbp-nav__arrow--up');
+      const downArrow  = panel.querySelector('.pbp-nav__arrow--down');
+      const pageReg    = panel.querySelector('.pbp-nav__page--regular');
+      const pageExtra  = panel.querySelector('.pbp-nav__page--extra');
+
+      if (hasExtras) {
+        downArrow.addEventListener('click', () => {
+          pageReg.style.display   = 'none';
+          pageExtra.style.display = '';
+          upArrow.style.display   = '';
+          downArrow.style.display = 'none';
+        });
+        upArrow.addEventListener('click', () => {
+          pageExtra.style.display = 'none';
+          pageReg.style.display   = '';
+          upArrow.style.display   = 'none';
+          downArrow.style.display = '';
+        });
+      }
     }
   </script>
 </body>
