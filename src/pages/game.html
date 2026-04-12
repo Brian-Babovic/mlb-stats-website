@@ -336,28 +336,45 @@
           </div>`;
       }
 
-      // Split nav items into regular (1-9) and extra innings (10+)
-      const regularItems = navItems.filter(x => x.inningNum <= 9);
-      const extraItems   = navItems.filter(x => x.inningNum > 9);
-      const hasExtras    = extraItems.length > 0;
+      // Build a lookup of nav items by "T1" / "B1" etc.
+      const navLookup = new Map(navItems.map(x => [`${x.half[0].toUpperCase()}${x.inningNum}`, x]));
+      const extraItems = navItems.filter(x => x.inningNum > 9);
+      const hasExtras  = extraItems.length > 0;
 
-      function navRow({ inningNum, half, startId }) {
-        const label = `${half === 'top' ? 'T' : 'B'}${inningNum}`;
-        return `
-          <div class="pbp-nav__half${half === 'bottom' ? ' pbp-nav__half--bottom' : ''}">
-            <span class="pbp-nav__label">${label}</span>
-            <button class="pbp-nav__dot" data-target="${startId}" title="${label}"></button>
-          </div>`;
+      function navRow(inningNum, half) {
+        const key   = `${half === 'top' ? 'T' : 'B'}${inningNum}`;
+        const item  = navLookup.get(key);
+        const isBottom = half === 'bottom';
+        if (item) {
+          return `
+            <div class="pbp-nav__half${isBottom ? ' pbp-nav__half--bottom' : ''}">
+              <span class="pbp-nav__label">${key}</span>
+              <button class="pbp-nav__dot" data-target="${item.startId}" title="${key}"></button>
+            </div>`;
+        } else {
+          return `
+            <div class="pbp-nav__half${isBottom ? ' pbp-nav__half--bottom' : ''} pbp-nav__half--empty">
+              <span class="pbp-nav__label">${key}</span>
+              <span class="pbp-nav__empty">–</span>
+            </div>`;
+        }
       }
+
+      function buildNavPage(innings) {
+        return innings.map(n => navRow(n, 'top') + navRow(n, 'bottom')).join('');
+      }
+
+      const regularInnings = Array.from({length: 9}, (_, i) => i + 1);
+      const extraInnings   = [...new Set(extraItems.map(x => x.inningNum))];
 
       const panel = container.querySelector('[data-panel="pbp"]');
       panel.innerHTML = `
         <div class="pbp-wrapper">
           <nav class="pbp-nav">
-            ${hasExtras ? '<button class="pbp-nav__arrow pbp-nav__arrow--up" style="display:none">↑</button>' : ''}
-            <div class="pbp-nav__page pbp-nav__page--regular">${regularItems.map(navRow).join('')}</div>
-            ${hasExtras ? `<div class="pbp-nav__page pbp-nav__page--extra" style="display:none">${extraItems.map(navRow).join('')}</div>` : ''}
-            ${hasExtras ? '<button class="pbp-nav__arrow pbp-nav__arrow--down">↓</button>' : ''}
+            ${hasExtras ? '<button class="pbp-nav__arrow pbp-nav__arrow--up" style="display:none"><span class="pbp-nav__arrow-label">1–9</span>↑</button>' : ''}
+            <div class="pbp-nav__page pbp-nav__page--regular">${buildNavPage(regularInnings)}</div>
+            ${hasExtras ? `<div class="pbp-nav__page pbp-nav__page--extra" style="display:none">${buildNavPage(extraInnings)}</div>` : ''}
+            ${hasExtras ? `<button class="pbp-nav__arrow pbp-nav__arrow--down">↓<span class="pbp-nav__arrow-label">${extraInnings[0]}–${extraInnings[extraInnings.length-1]}</span></button>` : ''}
           </nav>
           <div class="pbp-content">${html}</div>
         </div>

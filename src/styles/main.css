@@ -876,10 +876,22 @@ a:hover {
   flex: 1;
 }
 
+.pbp-nav__page--extra {
+  flex: none;
+}
+
+.pbp-nav__page--extra .pbp-nav__half {
+  flex: none;
+  height: calc(600px / 18);
+}
+
 .pbp-nav__arrow {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
   width: 100%;
-  padding: 5px 0;
+  padding: 4px 0;
   border: none;
   background: none;
   cursor: pointer;
@@ -887,6 +899,13 @@ a:hover {
   font-weight: 700;
   color: var(--text-primary);
   text-align: center;
+}
+
+.pbp-nav__arrow-label {
+  font-size: 8px;
+  font-weight: 600;
+  opacity: 0.55;
+  letter-spacing: 0.02em;
 }
 
 .pbp-nav__arrow:hover {
@@ -906,7 +925,7 @@ a:hover {
 }
 
 .pbp-nav__label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
@@ -914,8 +933,8 @@ a:hover {
 
 .pbp-nav__dot {
   display: block;
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border: none;
   padding: 0;
   border-radius: 50%;
@@ -926,6 +945,12 @@ a:hover {
 
 .pbp-nav__dot:hover {
   opacity: 0.65;
+}
+
+.pbp-nav__empty {
+  font-size: 10px;
+  opacity: 0.3;
+  flex-shrink: 0;
 }
 
 .pbp-content {
