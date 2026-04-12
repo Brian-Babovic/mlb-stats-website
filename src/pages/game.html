@@ -269,6 +269,7 @@
         const awayS     = play.result?.awayScore ?? 0;
         const homeS     = play.result?.homeScore ?? 0;
         const isScoring = play.about.isScoringPlay;
+        const outs      = play.count?.outs ?? 0;
 
         const orderLabel = batterId != null ? formatOrder(batterId, isTop) : null;
         const photoSrc   = batterId
@@ -277,6 +278,8 @@
 
         const awayScored = isScoring && isTop;
         const homeScored = isScoring && !isTop;
+
+        const outLabel = `${outs} ${outs === 1 ? 'out' : 'outs'}`;
 
         let scoringStyle = '';
         if (isScoring) {
@@ -292,12 +295,13 @@
               ${orderLabel != null ? `<span class="pbp-play__order-badge">${orderLabel}</span>` : ''}
             </div>
             <span class="pbp-play__desc">${desc}</span>
+            <span class="pbp-play__outs">${outLabel}</span>
             <div class="pbp-play__score-block">
-              <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="16" height="16" onerror="this.style.display='none'">
+              <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="18" height="18" onerror="this.style.display='none'">
               <span class="pbp-play__score-num${awayScored ? ' pbp-play__score-num--scored' : ''}">${awayS}</span>
               <span class="pbp-play__score-sep">–</span>
               <span class="pbp-play__score-num${homeScored ? ' pbp-play__score-num--scored' : ''}">${homeS}</span>
-              <img class="pbp-play__score-logo" src="${getLogoUrl(homeAbbr)}" alt="" width="16" height="16" onerror="this.style.display='none'">
+              <img class="pbp-play__score-logo" src="${getLogoUrl(homeAbbr)}" alt="" width="18" height="18" onerror="this.style.display='none'">
             </div>
           </div>`;
       }
@@ -316,18 +320,18 @@
       for (const [inningNum, halves] of innings) {
         let halvesHtml = '';
         if (halves.top.length) {
-          halvesHtml += `<div class="pbp-half-header">Top</div>`;
+          halvesHtml += `<div class="pbp-half-header">Top ${inningNum}</div>`;
           halvesHtml += halves.top.map(p => buildPlayRow(p, true)).join('');
         }
         if (halves.bottom.length) {
-          halvesHtml += `<div class="pbp-half-header">Bottom</div>`;
+          halvesHtml += `<div class="pbp-half-header">Bottom ${inningNum}</div>`;
           halvesHtml += halves.bottom.map(p => buildPlayRow(p, false)).join('');
         }
 
         html += `
           <div class="pbp-inning">
             <div class="pbp-inning__header">
-              <span class="pbp-inning__label">${ordinal(inningNum)}</span>
+              <span class="pbp-inning__label">${ordinal(inningNum)} Inning</span>
             </div>
             ${halvesHtml}
           </div>`;

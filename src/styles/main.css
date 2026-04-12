@@ -856,7 +856,7 @@ a:hover {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-primary);
   background: var(--bg-page);
   border-bottom: 1px solid var(--border-card);
 }
@@ -864,8 +864,8 @@ a:hover {
 .pbp-play {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 14px;
+  gap: 12px;
+  padding: 9px 14px;
   border-bottom: 1px solid var(--border-card);
 }
 
@@ -884,22 +884,22 @@ a:hover {
 }
 
 .pbp-play__team-logo {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .pbp-play__photo-wrap {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
 }
 
 .pbp-play__photo {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
   background: var(--bg-card);
@@ -911,7 +911,7 @@ a:hover {
   left: -4px;
   background: var(--text-primary);
   color: var(--bg-page);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   line-height: 1;
   padding: 2px 4px;
@@ -922,10 +922,19 @@ a:hover {
 
 .pbp-play__desc {
   flex: 1;
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
   line-height: 1.4;
   min-width: 0;
+}
+
+.pbp-play__outs {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pbp-play__score-block {
@@ -938,18 +947,18 @@ a:hover {
 
 .pbp-play__score-logo {
   display: block;
-  width: 16px;
-  height: 16px;
-  max-width: 16px;
-  max-height: 16px;
+  width: 18px;
+  height: 18px;
+  max-width: 18px;
+  max-height: 18px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .pbp-play__score-num {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-primary);
   min-width: 14px;
   text-align: center;
 }
@@ -960,8 +969,8 @@ a:hover {
 }
 
 .pbp-play__score-sep {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-primary);
 }
 
 /* ── Game page header ── */
