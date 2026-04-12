@@ -816,6 +816,8 @@ a:hover {
   text-align: left;
   max-height: 600px;
   overflow-y: auto;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   transition: scrollbar-color 0.3s;
@@ -859,11 +861,19 @@ a:hover {
   top: 0;
   align-self: flex-start;
   width: 52px;
+  height: 600px;
   flex-shrink: 0;
   background: var(--bg-card);
   border-right: 1px solid var(--border-card);
-  padding: 4px 0;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pbp-nav__page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .pbp-nav__arrow {
@@ -884,16 +894,15 @@ a:hover {
 }
 
 .pbp-nav__half {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: 0 8px;
 }
 
 .pbp-nav__half--bottom {
-  margin-bottom: 5px;
   border-bottom: 1px solid var(--border-card);
-  padding-bottom: 5px;
 }
 
 .pbp-nav__label {
