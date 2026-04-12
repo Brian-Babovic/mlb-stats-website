@@ -281,14 +281,8 @@
 
         const outLabel = `${outs} ${outs === 1 ? 'out' : 'outs'}`;
 
-        let scoringStyle = '';
-        if (isScoring) {
-          const color = TEAM_COLORS[logoAbbr] ?? '#16a34a';
-          scoringStyle = ` style="--scoring-color:${color};--scoring-bg:${hexToRgba(color, 0.06)};--scoring-bg-dark:${hexToRgba(color, 0.12)}"`;
-        }
-
         return `
-          <div class="pbp-play${isScoring ? ' pbp-play--scoring' : ''}"${scoringStyle}>
+          <div class="pbp-play${isScoring ? ' pbp-play--scoring' : ''}">
             <img class="pbp-play__team-logo" src="${getLogoUrl(logoAbbr)}" alt="" onerror="this.style.display='none'">
             <div class="pbp-play__photo-wrap">
               <img class="pbp-play__photo" src="${photoSrc}" alt="" onerror="this.style.opacity='0'">
@@ -297,11 +291,11 @@
             <span class="pbp-play__desc">${desc}</span>
             <span class="pbp-play__outs">${outLabel}</span>
             <div class="pbp-play__score-block">
-              <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="18" height="18" onerror="this.style.display='none'">
+              <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="36" height="36" onerror="this.style.display='none'">
               <span class="pbp-play__score-num${awayScored ? ' pbp-play__score-num--scored' : ''}">${awayS}</span>
               <span class="pbp-play__score-sep">–</span>
               <span class="pbp-play__score-num${homeScored ? ' pbp-play__score-num--scored' : ''}">${homeS}</span>
-              <img class="pbp-play__score-logo" src="${getLogoUrl(homeAbbr)}" alt="" width="18" height="18" onerror="this.style.display='none'">
+              <img class="pbp-play__score-logo" src="${getLogoUrl(homeAbbr)}" alt="" width="36" height="36" onerror="this.style.display='none'">
             </div>
           </div>`;
       }
