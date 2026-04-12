@@ -1078,12 +1078,72 @@ a:hover {
   min-width: 0;
 }
 
-.pbp-play__outs {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
+.pbp-play__situation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
+}
+
+.pbp-bases {
+  position: relative;
+  width: 34px;
+  height: 27px;
+}
+
+.pbp-bases__base {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--text-secondary);
+  transform: rotate(45deg);
+  background: transparent;
+  box-sizing: border-box;
+  opacity: 0.5;
+}
+
+.pbp-bases__base--on {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  opacity: 1;
+}
+
+.pbp-bases__base--second {
+  top: 0;
+  left: 50%;
+  margin-left: -5px;
+}
+
+.pbp-bases__base--third {
+  bottom: 0;
+  left: 0;
+}
+
+.pbp-bases__base--first {
+  bottom: 0;
+  right: 0;
+}
+
+.pbp-out-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.pbp-out-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--text-secondary);
+  background: transparent;
+  box-sizing: border-box;
+  opacity: 0.4;
+}
+
+.pbp-out-dot--on {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  opacity: 1;
 }
 
 .pbp-play__score-block {

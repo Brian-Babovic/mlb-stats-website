@@ -261,7 +261,7 @@
         return sub === 0 ? `${slot}` : `${slot}.${sub}`;
       }
 
-      function buildPlayRow(play, isTop) {
+      function buildPlayRow(play, isTop, preOuts, preBases) {
         const logoAbbr  = isTop ? awayAbbr : homeAbbr;
         const batter    = play.matchup?.batter;
         const batterId  = batter?.id;
@@ -269,7 +269,6 @@
         const awayS     = play.result?.awayScore ?? 0;
         const homeS     = play.result?.homeScore ?? 0;
         const isScoring = play.about.isScoringPlay;
-        const outs      = play.count?.outs ?? 0;
 
         const orderLabel = batterId != null ? formatOrder(batterId, isTop) : null;
         const photoSrc   = batterId
@@ -279,7 +278,18 @@
         const awayScored = isScoring && isTop;
         const homeScored = isScoring && !isTop;
 
-        const outLabel = `${outs} ${outs === 1 ? 'out' : 'outs'}`;
+        const situationHtml = `
+          <div class="pbp-play__situation">
+            <div class="pbp-bases">
+              <div class="pbp-bases__base pbp-bases__base--second${preBases.second ? ' pbp-bases__base--on' : ''}"></div>
+              <div class="pbp-bases__base pbp-bases__base--third${preBases.third ? ' pbp-bases__base--on' : ''}"></div>
+              <div class="pbp-bases__base pbp-bases__base--first${preBases.first ? ' pbp-bases__base--on' : ''}"></div>
+            </div>
+            <div class="pbp-out-dots">
+              <span class="pbp-out-dot${preOuts >= 1 ? ' pbp-out-dot--on' : ''}"></span>
+              <span class="pbp-out-dot${preOuts >= 2 ? ' pbp-out-dot--on' : ''}"></span>
+            </div>
+          </div>`;
 
         return `
           <div id="pbp-play-${play.about.atBatIndex}" class="pbp-play${isScoring ? ' pbp-play--scoring' : ''}">
@@ -289,7 +299,7 @@
               ${orderLabel != null ? `<span class="pbp-play__order-badge">${orderLabel}</span>` : ''}
             </div>
             <span class="pbp-play__desc">${desc}</span>
-            <span class="pbp-play__outs">${outLabel}</span>
+            ${situationHtml}
             <div class="pbp-play__score-block">
               <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="36" height="36" onerror="this.style.display='none'">
               <span class="pbp-play__score-num${awayScored ? ' pbp-play__score-num--scored' : ''}">${awayS}</span>
@@ -325,7 +335,23 @@
           navItems.push({ inningNum, half, startId, hasScore });
 
           halvesHtml += `<div class="pbp-half-header">${half === 'top' ? 'Top' : 'Bottom'} ${inningNum}</div>`;
-          halvesHtml += halfPlays.map(p => buildPlayRow(p, half === 'top')).join('');
+
+          // Track pre-play state (resets each half-inning)
+          let preOuts  = 0;
+          let preBases = { first: false, second: false, third: false };
+
+          for (const play of halfPlays) {
+            halvesHtml += buildPlayRow(play, half === 'top', preOuts, preBases);
+
+            // Advance state for next play
+            preOuts  = play.count?.outs ?? 0;
+            preBases = { first: false, second: false, third: false };
+            for (const r of play.runners ?? []) {
+              if (r.movement?.end === '1B') preBases.first  = true;
+              if (r.movement?.end === '2B') preBases.second = true;
+              if (r.movement?.end === '3B') preBases.third  = true;
+            }
+          }
         }
 
         html += `
