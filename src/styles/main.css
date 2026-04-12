@@ -953,6 +953,10 @@ a:hover {
   flex-shrink: 0;
 }
 
+.pbp-nav__half--scoring .pbp-nav__dot {
+  background: #16a34a;
+}
+
 .pbp-content {
   flex: 1;
   min-width: 0;
@@ -998,6 +1002,7 @@ a:hover {
   text-transform: uppercase;
   color: var(--text-primary);
   background: var(--bg-page);
+  scroll-margin-top: 48px;
   border-bottom: 1px solid var(--border-card);
 }
 

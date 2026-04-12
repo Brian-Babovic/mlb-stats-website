@@ -321,7 +321,8 @@
           if (!halfPlays.length) continue;
 
           const startId = `pbp-play-${halfPlays[0].about.atBatIndex}`;
-          navItems.push({ inningNum, half, startId });
+          const hasScore = halfPlays.some(p => p.about.isScoringPlay);
+          navItems.push({ inningNum, half, startId, hasScore });
 
           halvesHtml += `<div class="pbp-half-header">${half === 'top' ? 'Top' : 'Bottom'} ${inningNum}</div>`;
           halvesHtml += halfPlays.map(p => buildPlayRow(p, half === 'top')).join('');
@@ -347,7 +348,7 @@
         const isBottom = half === 'bottom';
         if (item) {
           return `
-            <div class="pbp-nav__half${isBottom ? ' pbp-nav__half--bottom' : ''}">
+            <div class="pbp-nav__half${isBottom ? ' pbp-nav__half--bottom' : ''}${item.hasScore ? ' pbp-nav__half--scoring' : ''}">
               <span class="pbp-nav__label">${key}</span>
               <button class="pbp-nav__dot" data-target="${item.startId}" title="${key}"></button>
             </div>`;
@@ -380,11 +381,14 @@
         </div>
       `;
 
-      // Dot click → scroll to play
+      // Dot click → scroll to half-inning
       panel.querySelectorAll('.pbp-nav__dot[data-target]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const el = document.getElementById(btn.dataset.target);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const firstPlay = document.getElementById(btn.dataset.target);
+          if (!firstPlay) return;
+          const prev = firstPlay.previousElementSibling;
+          const target = (prev && prev.classList.contains('pbp-half-header')) ? prev : firstPlay;
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
       });
 
