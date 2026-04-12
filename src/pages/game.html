@@ -278,17 +278,16 @@
         const awayScored = isScoring && isTop;
         const homeScored = isScoring && !isTop;
 
-        const situationHtml = `
+        const outLabel = `${preOuts} ${preOuts === 1 ? 'out' : 'outs'}`;
+
+        const basesHtml = `
           <div class="pbp-play__situation">
             <div class="pbp-bases">
               <div class="pbp-bases__base pbp-bases__base--second${preBases.second ? ' pbp-bases__base--on' : ''}"></div>
               <div class="pbp-bases__base pbp-bases__base--third${preBases.third ? ' pbp-bases__base--on' : ''}"></div>
               <div class="pbp-bases__base pbp-bases__base--first${preBases.first ? ' pbp-bases__base--on' : ''}"></div>
             </div>
-            <div class="pbp-out-dots">
-              <span class="pbp-out-dot${preOuts >= 1 ? ' pbp-out-dot--on' : ''}"></span>
-              <span class="pbp-out-dot${preOuts >= 2 ? ' pbp-out-dot--on' : ''}"></span>
-            </div>
+            <span class="pbp-play__outs">${outLabel}</span>
           </div>`;
 
         return `
@@ -296,10 +295,9 @@
             <img class="pbp-play__team-logo" src="${getLogoUrl(logoAbbr)}" alt="" onerror="this.style.display='none'">
             <div class="pbp-play__photo-wrap">
               <img class="pbp-play__photo" src="${photoSrc}" alt="" onerror="this.style.opacity='0'">
-              ${orderLabel != null ? `<span class="pbp-play__order-badge">${orderLabel}</span>` : ''}
             </div>
             <span class="pbp-play__desc">${desc}</span>
-            ${situationHtml}
+            ${basesHtml}
             <div class="pbp-play__score-block">
               <img class="pbp-play__score-logo" src="${getLogoUrl(awayAbbr)}" alt="" width="36" height="36" onerror="this.style.display='none'">
               <span class="pbp-play__score-num${awayScored ? ' pbp-play__score-num--scored' : ''}">${awayS}</span>
@@ -368,27 +366,28 @@
       const extraItems = navItems.filter(x => x.inningNum > 9);
       const hasExtras  = extraItems.length > 0;
 
-      function navRow(inningNum, half) {
-        const key   = `${half === 'top' ? 'T' : 'B'}${inningNum}`;
-        const item  = navLookup.get(key);
-        const isBottom = half === 'bottom';
+      function navDot(item, key) {
         if (item) {
-          return `
-            <div class="pbp-nav__half${isBottom ? ' pbp-nav__half--bottom' : ''}${item.hasScore ? ' pbp-nav__half--scoring' : ''}">
-              <span class="pbp-nav__label">${key}</span>
-              <button class="pbp-nav__dot" data-target="${item.startId}" title="${key}"></button>
-            </div>`;
-        } else {
-          return `
-            <div class="pbp-nav__half${isBottom ? ' pbp-nav__half--bottom' : ''} pbp-nav__half--empty">
-              <span class="pbp-nav__label">${key}</span>
-              <span class="pbp-nav__empty">–</span>
-            </div>`;
+          return `<button class="pbp-nav__dot${item.hasScore ? ' pbp-nav__dot--scoring' : ''}" data-target="${item.startId}" title="${key}"></button>`;
         }
+        return `<span class="pbp-nav__empty">–</span>`;
+      }
+
+      function navInning(inningNum) {
+        const topItem = navLookup.get(`T${inningNum}`);
+        const botItem = navLookup.get(`B${inningNum}`);
+        return `
+          <div class="pbp-nav__inning">
+            <span class="pbp-nav__label">${inningNum}</span>
+            <div class="pbp-nav__pair">
+              ${navDot(topItem, `T${inningNum}`)}
+              ${navDot(botItem, `B${inningNum}`)}
+            </div>
+          </div>`;
       }
 
       function buildNavPage(innings) {
-        return innings.map(n => navRow(n, 'top') + navRow(n, 'bottom')).join('');
+        return innings.map(n => navInning(n)).join('');
       }
 
       const regularInnings = Array.from({length: 9}, (_, i) => i + 1);
